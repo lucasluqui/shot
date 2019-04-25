@@ -8,6 +8,7 @@
 
 // core handlers and misc
 #include "core/dialog.pwn"
+#include "core/handlecmd.pwn"
 
 // admin commands
 #include "admin/timeset.pwn"
