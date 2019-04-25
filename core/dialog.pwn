@@ -8,11 +8,11 @@ public OnDialogResponse(playerid, dialogid, response, listitem, inputtext[])
 {
     if(dialogid == DIALOG_LOGIN)
     {
-        if(!response) // If they clicked 'Cancel' or pressed esc
+        if(!response)
         {
             Kick(playerid);
         }
-        else // Pressed ENTER or clicked 'Login' button
+        else
         {
             new pwdinput[32];
             if(sscanf(inputtext, "s[32]", pwdinput)) Kick(playerid);
@@ -21,15 +21,12 @@ public OnDialogResponse(playerid, dialogid, response, listitem, inputtext[])
                     SendClientMessage(playerid, 0xFFFFFFFF, "You are now logged in!");
                     TogglePlayerSpectating(playerid,false);
                 }else{
-                    SendClientMessage(playerid, 0xFFFFFFFF, "LOGIN FAILED.");
-
-                    // Re-show the login dialog
-                    ShowPlayerDialog(playerid, DIALOG_LOGIN, DIALOG_STYLE_PASSWORD, "Login", "It seems you're already registered, please type in your password:", "Login", "Exit");
+                    ShowPlayerDialog(playerid, DIALOG_LOGIN, DIALOG_STYLE_PASSWORD, "Login", "It seems you're already registered, please type in your password:\n{D62B20}Password did not match, try again.", "Login", "Exit");
                 }
             }
         }
-        return 1; // We handled a dialog, so return 1. Just like OnPlayerCommandText.
+        return 1;
     }
  
-    return 0; // You MUST return 0 here! Just like OnPlayerCommandText.
+    return 0;
 }
