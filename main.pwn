@@ -1,6 +1,9 @@
 #include <a_samp>
 #include <core>
 #include <float>
+#include <izcmd>
+#include <sscsanf2>
+#include "admin/time.pwn"
 #pragma tabsize 0
 
 #define INIT_HARDCODED_MONEY    69420
@@ -24,7 +27,7 @@ public OnPlayerSpawn(playerid)
 	TogglePlayerClock(playerid,0);
  	ResetPlayerMoney(playerid);
 	GivePlayerMoney(playerid, INIT_HARDCODED_MONEY);
-	GivePlayerWeapon(playerid,WEAPON_MP5,100);
+	GivePlayerWeapon(playerid,WEAPON_MP5,99999);
 	TogglePlayerClock(playerid, 0);
 
 	return 1;
