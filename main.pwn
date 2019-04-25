@@ -2,7 +2,7 @@
 #include <core>
 #include <float>
 #include <izcmd>
-#include <sscsanf2>
+#include <sscanf2>
 #include "admin/time.pwn"
 #pragma tabsize 0
 
