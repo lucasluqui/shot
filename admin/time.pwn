@@ -1,6 +1,4 @@
 #include <a_samp>
-#include <core>
-#include <float>
 #include <izcmd>
 #include <sscanf2>
 

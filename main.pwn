@@ -1,9 +1,9 @@
 #include <a_samp>
 #include <core>
 #include <float>
-#include <izcmd>
-#include <sscanf2>
-#include "admin/time.pwn"
+//#include <izcmd>
+//#include <sscanf2>
+//#include "admin/time.pwn"
 #pragma tabsize 0
 
 #define INIT_HARDCODED_MONEY    69420
@@ -27,7 +27,7 @@ public OnPlayerSpawn(playerid)
 	TogglePlayerClock(playerid,0);
  	ResetPlayerMoney(playerid);
 	GivePlayerMoney(playerid, INIT_HARDCODED_MONEY);
-	GivePlayerWeapon(playerid,WEAPON_MP5,99999);
+	GivePlayerWeapon(playerid,WEAPON_MP5,9999);
 	TogglePlayerClock(playerid, 0);
 
 	return 1;
@@ -65,3 +65,13 @@ public OnPlayerUpdate(playerid)
 
 	return 1;
 }
+
+/*
+COMMAND:timeset(playerid,params[])
+{
+    new timeid;
+    if(sscanf(params,"i",timeid)) SendClientMessage(playerid,-1,"Usage: /timeset [time id]");
+    else SetWorldTime(timeid);
+    return CMD_SUCCESS;
+}
+*/
