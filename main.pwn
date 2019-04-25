@@ -1,12 +1,19 @@
 #include <a_samp>
 #include <core>
 #include <float>
-//#include <izcmd>
-//#include <sscanf2>
-//#include "admin/time.pwn"
+
+// useful command libraries
+#include <izcmd>
+#include <sscanf2>
+
+// admin commands
+#include "admin/timeset.pwn"
+#include "admin/weatherset.pwn"
+
 #pragma tabsize 0
 
 #define INIT_HARDCODED_MONEY    69420
+#define WHITE_SUPREMACY         0xFFFFFFFF
 
 main()
 {
@@ -15,7 +22,7 @@ main()
 
 public OnPlayerConnect(playerid)
 {
-  	SendClientMessage(playerid,0xFFFFFFFF,"OnPlayerConnect was triggered here, why am I even debugging like this?!");
+  	SendClientMessage(playerid,WHITE_SUPREMACY,"OnPlayerConnect was triggered here, why am I even debugging like this?!");
  	return 1;
 }
 
@@ -65,13 +72,3 @@ public OnPlayerUpdate(playerid)
 
 	return 1;
 }
-
-/*
-COMMAND:timeset(playerid,params[])
-{
-    new timeid;
-    if(sscanf(params,"i",timeid)) SendClientMessage(playerid,-1,"Usage: /timeset [time id]");
-    else SetWorldTime(timeid);
-    return CMD_SUCCESS;
-}
-*/
