@@ -10,6 +10,9 @@
 #include "admin/timeset.pwn"
 #include "admin/weatherset.pwn"
 
+// player commands
+#include "player/veh.pwn"
+
 #pragma tabsize 0
 
 #define INIT_HARDCODED_MONEY    69420
