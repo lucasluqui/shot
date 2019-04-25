@@ -6,6 +6,6 @@ public OnPlayerCommandReceived(playerid,cmdtext[])
     if (playerState != PLAYER_STATE_SPECTATING && playerState != PLAYER_STATE_WASTED){
         return 1;
     }
-    SendClientMessage(playerid,-1,"You can not input commands right now.")
+    SendClientMessage(playerid,-1,"{D62B20}You can not input commands right now.")
     return 0;
 }

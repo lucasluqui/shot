@@ -15,7 +15,7 @@
 #include "admin/weatherset.pwn"
 
 // player commands
-#include "player/veh.pwn"
+#include "player/standalones.pwn"
 
 #pragma tabsize 0
 
@@ -68,6 +68,7 @@ public OnGameModeInit()
 	DisableInteriorEnterExits();
 	SetWeather(2);
 	SetWorldTime(11);
+	UsePlayerPedAnims();
 
 	return 1;
 }
@@ -84,4 +85,22 @@ public OnPlayerUpdate(playerid)
 	}
 
 	return 1;
+}
+
+public OnPlayerText(playerid, text[])
+{
+    SetPlayerChatBubble(playerid, text, 0xFFFFFFFF, 40.0, 10000);
+    return 1;
+}
+
+public OnPlayerGiveDamage(playerid, damagedid, Float:amount, weaponid, bodypart)
+{
+    //new string[128], victim[MAX_PLAYER_NAME], attacker[MAX_PLAYER_NAME];
+    //new weaponname[24];
+	if (bodypart == 9){
+		new Float:hp;
+		GetPlayerHealth(damagedid, hp);
+		SetPlayerHealth(damagedid, hp-100);
+	}
+    return 1;
 }
