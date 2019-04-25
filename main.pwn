@@ -6,6 +6,9 @@
 #include <izcmd>
 #include <sscanf2>
 
+// core handlers and misc
+#include "core/dialog.pwn"
+
 // admin commands
 #include "admin/timeset.pwn"
 #include "admin/weatherset.pwn"
@@ -18,6 +21,10 @@
 #define INIT_HARDCODED_MONEY    69420
 #define WHITE_SUPREMACY         0xFFFFFFFF
 
+
+// enums
+#include "core/enums/dialogs.pwn"
+
 main()
 {
 	print("Initializing project-shoot...\n");
@@ -25,7 +32,9 @@ main()
 
 public OnPlayerConnect(playerid)
 {
-  	SendClientMessage(playerid,WHITE_SUPREMACY,"OnPlayerConnect was triggered here, why am I even debugging like this?!");
+  	TogglePlayerSpectating(playerid,true);
+	SendClientMessage(playerid,WHITE_SUPREMACY,"OnPlayerConnect was triggered here, why am I even debugging like this?!");
+	ShowPlayerDialog(playerid, DIALOG_LOGIN, DIALOG_STYLE_PASSWORD, "Login", "It seems you're already registered, please type in your password:", "Login", "Exit");
  	return 1;
 }
 
