@@ -1,1 +1,0 @@
-pawncc.exe main.pwn
