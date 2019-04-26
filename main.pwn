@@ -105,8 +105,9 @@ public OnPlayerConnect(playerid)
         tmp[playerdata]; 
 
     gPData[playerid] = tmp; 
+	gPData[playerid][loggedin] = 0;
+	gPData[playerid][statsSet] = 0;
 	TogglePlayerSpectating(playerid,true);
-	SendClientMessage(playerid,COLOR_DEFAULT,"OnPlayerConnect was triggered here, why am I even debugging like this?!");
 
     new 
         Query[82],
@@ -153,14 +154,21 @@ public OnPlayerSpawn(playerid)
 	
 	SetPlayerInterior(playerid,0);
 	TogglePlayerClock(playerid,0);
- 	ResetPlayerMoney(playerid);
-	SetPlayerScore(playerid,gPData[playerid][level]);
-	GivePlayerMoney(playerid, gPData[playerid][balance]);
+	if(gPData[playerid][statsSet] < 1)
+	{
+		SetPlayerPos(playerid, gPData[playerid][pposx], gPData[playerid][pposy], gPData[playerid][pposz]);
+		SetPlayerFacingAngle(playerid, gPData[playerid][pposa]);
+		SetPlayerScore(playerid,gPData[playerid][level]);
+		ResetPlayerMoney(playerid);
+		GivePlayerMoney(playerid, gPData[playerid][balance]);
+		gPData[playerid][statsSet] = 1;
+	}
+	else
+	{
+		SetPlayerPos(playerid, 2493.9133, -1682.3986, 13.3382);
+	}
 	SetPlayerSkin(playerid, gPData[playerid][skinid]);
-	SetPlayerPos(playerid, gPData[playerid][pposx], gPData[playerid][pposy], gPData[playerid][pposz]);
-	SetPlayerFacingAngle(playerid, gPData[playerid][pposa]);
 	GivePlayerWeapon(playerid,WEAPON_MP5,9999);
-	TogglePlayerClock(playerid, 0);
 
 	return 1;
 }

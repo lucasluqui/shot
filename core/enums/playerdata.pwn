@@ -13,5 +13,6 @@ enum playerdata
     Float:pposy,  
     Float:pposz,
     Float:pposa, 
-    loggedin 
+    loggedin,
+    statsSet
 }
