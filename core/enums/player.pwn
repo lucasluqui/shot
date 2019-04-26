@@ -6,10 +6,11 @@ enum playerdata
     name[MAX_PLAYER_NAME],  
     password[129],  
     level,
-    experience,
+    xp,
     balance,  
     Float:pposx,  
     Float:pposy,  
-    Float:pposz,  
+    Float:pposz,
+    Float:pposa, 
     loggedin 
 }

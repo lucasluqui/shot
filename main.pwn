@@ -39,6 +39,28 @@ stock getPname(playerid)
     return pname;  
 }
 
+stock pullData(playerid)
+{
+	new 
+	DBResult: Result, buf[129];
+
+	format(buf, sizeof buf, "SELECT * FROM playerdata WHERE name = '%q' LIMIT 1", gPData[playerid][name]);
+	Result = db_query(Database, buf);
+
+	if (db_num_rows(Result))
+	{
+		gPData[playerid][id] = db_get_field_assoc_int(Result, "id"); 
+		gPData[playerid][level] = db_get_field_assoc_int(Result, "level");
+		gPData[playerid][xp] = db_get_field_assoc_int(Result, "xp");
+		gPData[playerid][balance] = db_get_field_assoc_int(Result, "balance");
+		gPData[playerid][pposx] = db_get_field_assoc_int(Result, "pposx");
+		gPData[playerid][pposy] = db_get_field_assoc_int(Result, "pposy");
+		gPData[playerid][pposz] = db_get_field_assoc_int(Result, "pposz");
+		gPData[playerid][pposa] = db_get_field_assoc_int(Result, "pposa");
+	} 
+	db_free_result(Result);
+}
+
 native WP_Hash(buffer[], len, const str[]);
 
 main()
@@ -65,7 +87,7 @@ public OnGameModeInit()
     else
     { 
         db_query(Database, "PRAGMA synchronous = OFF"); 
-        db_query(Database, "CREATE TABLE IF NOT EXISTS playerdata (id INTEGER PRIMARY KEY AUTOINCREMENT, name VARCHAR(24) COLLATE NOCASE, password VARCHAR(129), level INTEGER DEFAULT 1 NOT NULL, xp INTEGER DEFAULT 0 NOT NULL, balance INTEGER DEFAULT 2500 NOT NULL, pposx REAL DEFAULT 0.0 NOT NULL, pposy REAL DEFAULT 0.0 NOT NULL, pposz REAL DEFAULT 0.0 NOT NULL)"); 
+        db_query(Database, "CREATE TABLE IF NOT EXISTS playerdata (id INTEGER PRIMARY KEY AUTOINCREMENT, name VARCHAR(24) COLLATE NOCASE, password VARCHAR(129), level INTEGER DEFAULT 1 NOT NULL, xp INTEGER DEFAULT 0 NOT NULL, balance INTEGER DEFAULT 2500 NOT NULL, pposx REAL DEFAULT 0.0 NOT NULL, pposy REAL DEFAULT 0.0 NOT NULL, pposz REAL DEFAULT 0.0 NOT NULL, pposa REAL DEFAULT 0.0 NOT NULL)"); 
     } 
     return 1; 
 }
@@ -110,10 +132,11 @@ public OnPlayerDisconnect(playerid, reason)
 { 
     
 	new
-		Query[150]; 
+		Query[300]; 
 
 	GetPlayerPos(playerid, gPData[playerid][pposx], gPData[playerid][pposy], gPData[playerid][pposz]);
-	format(Query, sizeof Query, "UPDATE playerdata SET pposx=%r pposy=%r pposz=%r WHERE id = %d", gPData[playerid][pposx], gPData[playerid][pposy], gPData[playerid][pposz], gPData[playerid][id]);
+	GetPlayerFacingAngle(playerid, gPData[playerid][pposa]);
+	format(Query, sizeof Query, "UPDATE playerdata SET pposx=%f, pposy=%f, pposz=%f, pposa=%f WHERE id = %d", gPData[playerid][pposx], gPData[playerid][pposy], gPData[playerid][pposz], gPData[playerid][pposa], gPData[playerid][id]);
 	db_query(Database, Query);
 	
 	new  
@@ -130,20 +153,12 @@ public OnPlayerSpawn(playerid)
 	SetPlayerInterior(playerid,0);
 	TogglePlayerClock(playerid,0);
  	ResetPlayerMoney(playerid);
-	new 
-		Query[82],
-		DBResult: Result;
-
-	format(Query, sizeof Query, "SELECT (level, balance) FROM playerdata WHERE name = '%q' LIMIT 1", gPData[playerid][name]);
-	Result = db_query(Database, Query);
-	db_get_field_assoc(Result, "level", gPData[playerid][level], 258);
-	db_get_field_assoc(Result, "balance", gPData[playerid][balance], 258);
 	SetPlayerScore(playerid,gPData[playerid][level]);
 	GivePlayerMoney(playerid, gPData[playerid][balance]);
-	db_free_result(Result); 
+	SetPlayerPos(playerid, gPData[playerid][pposx], gPData[playerid][pposy], gPData[playerid][pposz]);
+	SetPlayerFacingAngle(playerid, gPData[playerid][pposa]);
 	GivePlayerWeapon(playerid,WEAPON_MP5,9999);
 	TogglePlayerClock(playerid, 0);
-	SetPlayerPos(playerid, gPData[playerid][pposx], gPData[playerid][pposy], gPData[playerid][pposz]);
 
 	return 1;
 }
@@ -180,6 +195,7 @@ public OnDialogResponse(playerid, dialogid, response, listitem, inputtext[])
 
             db_free_result(Result);
 
+			pullData(playerid);
 			TogglePlayerSpectating(playerid,false);
 		}
 		case DIALOG_LOGIN:
@@ -196,6 +212,7 @@ public OnDialogResponse(playerid, dialogid, response, listitem, inputtext[])
 				ShowPlayerDialog(playerid, DIALOG_LOGIN, DIALOG_STYLE_PASSWORD, "Login", "It seems you're already registered, please type in your password:\n{D62B20}Password did not match, try again.", "Login", "Exit");
 				return 1;
 			}
+			/*
 			new 
 				DBResult: Result; 
 
@@ -205,8 +222,17 @@ public OnDialogResponse(playerid, dialogid, response, listitem, inputtext[])
 			if (db_num_rows(Result))
 			{
 				gPData[playerid][id] = db_get_field_assoc_int(Result, "id"); 
+				gPData[playerid][level] = db_get_field_assoc_int(Result, "level");
+				gPData[playerid][xp] = db_get_field_assoc_int(Result, "xp");
+				gPData[playerid][balance] = db_get_field_assoc_int(Result, "balance");
+				gPData[playerid][pposx] = db_get_field_assoc_int(Result, "pposx");
+				gPData[playerid][pposy] = db_get_field_assoc_int(Result, "pposy");
+				gPData[playerid][pposz] = db_get_field_assoc_int(Result, "pposz");
+				gPData[playerid][pposa] = db_get_field_assoc_int(Result, "pposa");
 			} 
 			db_free_result(Result);
+			*/
+			pullData(playerid);
 			gPData[playerid][loggedin] = 1;
 			TogglePlayerSpectating(playerid,false);
 		}
