@@ -26,6 +26,7 @@
 // enums
 #include "core/enums/dialogs.pwn"
 #include "core/enums/playerdata.pwn"
+#include "core/enums/privileges.pwn"
 
 new 
     DB: Database;
@@ -49,7 +50,8 @@ stock pullData(playerid)
 
 	if (db_num_rows(Result))
 	{
-		gPData[playerid][id] = db_get_field_assoc_int(Result, "id"); 
+		gPData[playerid][id] = db_get_field_assoc_int(Result, "id");
+		gPData[playerid][privilege] = db_get_field_assoc_int(Result, "privilege");
 		gPData[playerid][level] = db_get_field_assoc_int(Result, "level");
 		gPData[playerid][xp] = db_get_field_assoc_int(Result, "xp");
 		gPData[playerid][balance] = db_get_field_assoc_int(Result, "balance");
@@ -60,6 +62,38 @@ stock pullData(playerid)
 		gPData[playerid][pposa] = db_get_field_assoc_int(Result, "pposa");
 	} 
 	db_free_result(Result);
+}
+
+stock sendToAdminChat(playerid, msg[])
+{
+	new pname[MAX_PLAYER_NAME], string[128];
+	GetPlayerName(playerid, pname, sizeof(pname));
+	for(new i; i < MAX_PLAYERS; i++)
+    {
+        if(isStaff(i))
+		{
+			format(string, sizeof string, "Administration: %s: %s", pname, msg);
+			SendClientMessage(i,COLOR_DEFAULT,string);
+        }
+    }
+}
+
+stock isStaff(playerid)
+{
+	if(gPData[playerid][privilege] >= PRIVILEGE_LOWMODERATOR)
+	{
+		return 1;
+	}
+	return 0;
+}
+
+stock isCash(playerid)
+{
+	if(PRIVILEGE_LOWMODERATOR > gPData[playerid][privilege] >= PRIVILEGE_CASH)
+	{
+		return 1;
+	}
+	return 0;
 }
 
 native WP_Hash(buffer[], len, const str[]);
@@ -88,7 +122,7 @@ public OnGameModeInit()
     else
     { 
         db_query(Database, "PRAGMA synchronous = OFF"); 
-        db_query(Database, "CREATE TABLE IF NOT EXISTS playerdata (id INTEGER PRIMARY KEY AUTOINCREMENT, name VARCHAR(24) COLLATE NOCASE, password VARCHAR(129), level INTEGER DEFAULT 1 NOT NULL, xp INTEGER DEFAULT 0 NOT NULL, balance INTEGER DEFAULT 2500 NOT NULL, skinid INTEGER DEFAULT 73 NOT NULL, pposx REAL DEFAULT 0.0 NOT NULL, pposy REAL DEFAULT 0.0 NOT NULL, pposz REAL DEFAULT 0.0 NOT NULL, pposa REAL DEFAULT 0.0 NOT NULL)"); 
+        db_query(Database, "CREATE TABLE IF NOT EXISTS playerdata (id INTEGER PRIMARY KEY AUTOINCREMENT, name VARCHAR(24) COLLATE NOCASE, password VARCHAR(129), privilege INTEGER DEFAULT 0 NOT NULL, level INTEGER DEFAULT 1 NOT NULL, xp INTEGER DEFAULT 0 NOT NULL, balance INTEGER DEFAULT 2500 NOT NULL, skinid INTEGER DEFAULT 73 NOT NULL, pposx REAL DEFAULT 0.0 NOT NULL, pposy REAL DEFAULT 0.0 NOT NULL, pposz REAL DEFAULT 0.0 NOT NULL, pposa REAL DEFAULT 0.0 NOT NULL)"); 
     } 
     return 1; 
 }
@@ -260,4 +294,73 @@ public OnPlayerGiveDamage(playerid, damagedid, Float:amount, weaponid, bodypart)
 		SetPlayerHealth(damagedid, hp-95);
 	}
     return 1;
+}
+
+COMMAND:staff(playerid,params[])
+{
+    if(!isnull(params)) {
+        return SendClientMessage(playerid,COLOR_FAILURE,"No parameters required.");
+    }
+
+    new string[128], found;
+	format(string, sizeof(string), "* STAFF ONLINE:");
+	SendClientMessage(playerid,COLOR_DEFAULT,string);
+
+    for(new i; i < MAX_PLAYERS; i++)
+    {
+        if(gPData[i][privilege] >= PRIVILEGE_LOWMODERATOR)
+		{
+			new pname[MAX_PLAYER_NAME];
+        	GetPlayerName(i, pname, sizeof(pname));
+			switch(gPData[i][privilege])
+			{
+				case PRIVILEGE_LOWMODERATOR:
+				{
+					format(string, sizeof(string), "{E67E22}** Moderator (1) %s (ID: %d)", pname, i);
+					SendClientMessage(playerid,COLOR_DEFAULT,string);
+				}
+				case PRIVILEGE_MIDMODERATOR:
+				{
+					format(string, sizeof(string), "{E67E22}** Staff %s (ID: %d)", pname, i);
+					SendClientMessage(playerid,COLOR_DEFAULT,string);
+				}
+				case PRIVILEGE_HIGHMODERATOR:
+				{
+					format(string, sizeof(string), "{E67E22}** Moderator (3) %s (ID: %d)", pname, i);
+					SendClientMessage(playerid,COLOR_DEFAULT,string);
+				}
+				case PRIVILEGE_ADMINISTRATOR:
+				{
+					format(string, sizeof(string), "{E74C3C}** Administrator %s (ID: %d)", pname, i);
+					SendClientMessage(playerid,COLOR_DEFAULT,string);
+				}
+				case PRIVILEGE_FOUNDER:
+				{
+					format(string, sizeof(string), "{E74C3C}** Founder %s (ID: %d)", pname, i);
+					SendClientMessage(playerid,COLOR_DEFAULT,string);
+				}
+				default: return CMD_SUCCESS;
+			}
+            found++;
+        }
+    }
+    if(found == 0){
+        SendClientMessage(playerid,COLOR_DEFAULT,"There are no staff members online.");
+    }
+    return CMD_SUCCESS;
+}
+
+COMMAND:ac(playerid,params[])
+{
+    sendToAdminChat(playerid, params);
+    return CMD_SUCCESS;
+}
+
+COMMAND:stats(playerid,params[])
+{
+	new string[128];
+	SendClientMessage(playerid,COLOR_DEFAULT,"Your stats:");
+	format(string, sizeof(string), "ID DB: %d | Privilege Level: %d | Level: %d | Experience: %d | Balance: %d | Skin ID: %d", gPData[playerid][id], gPData[playerid][privilege], gPData[playerid][level], gPData[playerid][xp], gPData[playerid][balance], gPData[playerid][skinid]);
+	SendClientMessage(playerid,COLOR_DEFAULT,string);
+    return CMD_SUCCESS;
 }

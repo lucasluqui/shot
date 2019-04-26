@@ -4,7 +4,8 @@ enum playerdata
 {
     id,  
     name[MAX_PLAYER_NAME],  
-    password[129],  
+    password[129],
+    privilege,
     level,
     xp,
     balance,

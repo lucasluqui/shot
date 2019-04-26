@@ -1,4 +1,5 @@
 #include <a_samp>
+#include <float>
 #include <izcmd>
 #include <sscanf2>
 
@@ -31,7 +32,14 @@ COMMAND:tp(playerid,params[])
     }
     if(found == 1){
         GetPlayerPos(result, x, y, z);
-        SetPlayerPos(playerid, x+2, y, z+2);
+        if(IsPlayerInAnyVehicle(playerid) && GetPlayerState(playerid) == 2)
+        {
+            SetVehiclePos(GetPlayerVehicleID(playerid), x+2, y, z+2);
+        }
+        else
+        {
+            SetPlayerPos(playerid, x+2, y, z+2);
+        }
         GetPlayerName(result, target, sizeof(target));
         GetPlayerName(playerid, invoker, sizeof(invoker));
         format(string, sizeof string, "You were teleported to %s.", target); 
@@ -69,7 +77,14 @@ COMMAND:bring(playerid,params[])
     }
     if(found == 1){
         GetPlayerPos(playerid, x, y, z);
-        SetPlayerPos(result, x+2, y, z+2);
+        if(IsPlayerInAnyVehicle(result) && GetPlayerState(result) == 2)
+        {
+            SetVehiclePos(GetPlayerVehicleID(result), x+2, y, z+2);
+        }
+        else
+        {
+            SetPlayerPos(result, x+2, y, z+2);
+        }
         GetPlayerName(result, target, sizeof(target));
         GetPlayerName(playerid, invoker, sizeof(invoker));
         format(string, sizeof string, "You brought %s to your position.", target); 
@@ -108,6 +123,31 @@ COMMAND:obring(playerid,params[])
     SendClientMessage(playerid,COLOR_DEFAULT,string);
     format(string, sizeof string, "%s brought you to his position.", invoker); 
     SendClientMessage(pid,COLOR_DEFAULT,string);
+    return CMD_SUCCESS;
+}
+
+COMMAND:bringveh(playerid,params[])
+{
+    new vid, distance, string[128], Float:x, Float:y, Float:z, Float:a;
+    if(sscanf(params,"i",vid)) return SendClientMessage(playerid,COLOR_FAILURE,"Usage: /bringveh [vehicle id]");
+    
+    distance = 5;
+    
+    GetPlayerPos(playerid, x, y, z);
+    GetPlayerFacingAngle(playerid, a);
+    if (GetPlayerVehicleID(playerid))
+    {
+        distance += 2;
+        GetVehicleZAngle(GetPlayerVehicleID(playerid), a);
+    }
+
+    x += (distance * floatsin(-a, degrees));
+    y += (distance * floatcos(-a, degrees));
+    
+    SetVehiclePos(vid, x, y, z);
+    
+    format(string, sizeof string, "You brought vehicle ID %d to your position.", vid); 
+    SendClientMessage(playerid,COLOR_DEFAULT,string);
     return CMD_SUCCESS;
 }
 

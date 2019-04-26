@@ -87,7 +87,17 @@ CMD:repair(playerid, params[])
     if(!IsPlayerInAnyVehicle(playerid)) return SendClientMessage(playerid, COLOR_FAILURE, "You are not in a vehicle.");
     if(GetPlayerState(playerid) != 2) return SendClientMessage(playerid, COLOR_FAILURE, "You are not in the driver seat.");
     RepairVehicle(GetPlayerVehicleID(playerid));
-    SendClientMessage(playerid, COLOR_DEFAULT, "Your vehicle has been sucessfully repaired.");
+    SendClientMessage(playerid, COLOR_DEFAULT, "Your vehicle has been successfully repaired.");
+    PlayerPlaySound(playerid, 1133, 0.0, 0.0, 0.0);
+    return 1;
+}
+
+CMD:nitro(playerid, params[])
+{
+    if(!IsPlayerInAnyVehicle(playerid)) return SendClientMessage(playerid, COLOR_FAILURE, "You are not in a vehicle.");
+    if(GetPlayerState(playerid) != 2) return SendClientMessage(playerid, COLOR_FAILURE, "You are not in the driver seat.");
+    AddVehicleComponent(GetPlayerVehicleID(playerid), 1010);
+    SendClientMessage(playerid, COLOR_DEFAULT, "Your vehicle now has x10 nitro.");
     PlayerPlaySound(playerid, 1133, 0.0, 0.0, 0.0);
     return 1;
 }
