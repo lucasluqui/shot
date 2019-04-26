@@ -25,7 +25,7 @@
 
 // enums
 #include "core/enums/dialogs.pwn"
-#include "core/enums/player.pwn"
+#include "core/enums/playerdata.pwn"
 
 new 
     DB: Database;
@@ -53,6 +53,7 @@ stock pullData(playerid)
 		gPData[playerid][level] = db_get_field_assoc_int(Result, "level");
 		gPData[playerid][xp] = db_get_field_assoc_int(Result, "xp");
 		gPData[playerid][balance] = db_get_field_assoc_int(Result, "balance");
+		gPData[playerid][skinid] = db_get_field_assoc_int(Result, "skinid");
 		gPData[playerid][pposx] = db_get_field_assoc_int(Result, "pposx");
 		gPData[playerid][pposy] = db_get_field_assoc_int(Result, "pposy");
 		gPData[playerid][pposz] = db_get_field_assoc_int(Result, "pposz");
@@ -87,7 +88,7 @@ public OnGameModeInit()
     else
     { 
         db_query(Database, "PRAGMA synchronous = OFF"); 
-        db_query(Database, "CREATE TABLE IF NOT EXISTS playerdata (id INTEGER PRIMARY KEY AUTOINCREMENT, name VARCHAR(24) COLLATE NOCASE, password VARCHAR(129), level INTEGER DEFAULT 1 NOT NULL, xp INTEGER DEFAULT 0 NOT NULL, balance INTEGER DEFAULT 2500 NOT NULL, pposx REAL DEFAULT 0.0 NOT NULL, pposy REAL DEFAULT 0.0 NOT NULL, pposz REAL DEFAULT 0.0 NOT NULL, pposa REAL DEFAULT 0.0 NOT NULL)"); 
+        db_query(Database, "CREATE TABLE IF NOT EXISTS playerdata (id INTEGER PRIMARY KEY AUTOINCREMENT, name VARCHAR(24) COLLATE NOCASE, password VARCHAR(129), level INTEGER DEFAULT 1 NOT NULL, xp INTEGER DEFAULT 0 NOT NULL, balance INTEGER DEFAULT 2500 NOT NULL, skinid INTEGER DEFAULT 73 NOT NULL, pposx REAL DEFAULT 0.0 NOT NULL, pposy REAL DEFAULT 0.0 NOT NULL, pposz REAL DEFAULT 0.0 NOT NULL, pposa REAL DEFAULT 0.0 NOT NULL)"); 
     } 
     return 1; 
 }
@@ -136,7 +137,7 @@ public OnPlayerDisconnect(playerid, reason)
 
 	GetPlayerPos(playerid, gPData[playerid][pposx], gPData[playerid][pposy], gPData[playerid][pposz]);
 	GetPlayerFacingAngle(playerid, gPData[playerid][pposa]);
-	format(Query, sizeof Query, "UPDATE playerdata SET pposx=%f, pposy=%f, pposz=%f, pposa=%f WHERE id = %d", gPData[playerid][pposx], gPData[playerid][pposy], gPData[playerid][pposz], gPData[playerid][pposa], gPData[playerid][id]);
+	format(Query, sizeof Query, "UPDATE playerdata SET pposx=%f, pposy=%f, pposz=%f, pposa=%f, skinid=%d WHERE id = %d", gPData[playerid][pposx], gPData[playerid][pposy], gPData[playerid][pposz], gPData[playerid][pposa], gPData[playerid][skinid], gPData[playerid][id]);
 	db_query(Database, Query);
 	
 	new  
@@ -155,6 +156,7 @@ public OnPlayerSpawn(playerid)
  	ResetPlayerMoney(playerid);
 	SetPlayerScore(playerid,gPData[playerid][level]);
 	GivePlayerMoney(playerid, gPData[playerid][balance]);
+	SetPlayerSkin(playerid, gPData[playerid][skinid]);
 	SetPlayerPos(playerid, gPData[playerid][pposx], gPData[playerid][pposy], gPData[playerid][pposz]);
 	SetPlayerFacingAngle(playerid, gPData[playerid][pposa]);
 	GivePlayerWeapon(playerid,WEAPON_MP5,9999);
@@ -164,8 +166,9 @@ public OnPlayerSpawn(playerid)
 }
 
 public OnPlayerDeath(playerid, killerid, reason)
-{
-   	return 1;
+{ 	
+	gPData[playerid][skinid] = GetPlayerSkin(playerid);
+	return 1;
 }
 
 public OnDialogResponse(playerid, dialogid, response, listitem, inputtext[])
@@ -212,26 +215,6 @@ public OnDialogResponse(playerid, dialogid, response, listitem, inputtext[])
 				ShowPlayerDialog(playerid, DIALOG_LOGIN, DIALOG_STYLE_PASSWORD, "Login", "It seems you're already registered, please type in your password:\n{D62B20}Password did not match, try again.", "Login", "Exit");
 				return 1;
 			}
-			/*
-			new 
-				DBResult: Result; 
-
-			format(buf, sizeof buf, "SELECT * FROM playerdata WHERE name = '%q' LIMIT 1", gPData[playerid][name]);
-			Result = db_query(Database, buf);
-
-			if (db_num_rows(Result))
-			{
-				gPData[playerid][id] = db_get_field_assoc_int(Result, "id"); 
-				gPData[playerid][level] = db_get_field_assoc_int(Result, "level");
-				gPData[playerid][xp] = db_get_field_assoc_int(Result, "xp");
-				gPData[playerid][balance] = db_get_field_assoc_int(Result, "balance");
-				gPData[playerid][pposx] = db_get_field_assoc_int(Result, "pposx");
-				gPData[playerid][pposy] = db_get_field_assoc_int(Result, "pposy");
-				gPData[playerid][pposz] = db_get_field_assoc_int(Result, "pposz");
-				gPData[playerid][pposa] = db_get_field_assoc_int(Result, "pposa");
-			} 
-			db_free_result(Result);
-			*/
 			pullData(playerid);
 			gPData[playerid][loggedin] = 1;
 			TogglePlayerSpectating(playerid,false);
