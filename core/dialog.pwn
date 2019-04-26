@@ -2,7 +2,9 @@
 #include <sscanf2>
 #include "core/enums/dialogs.pwn"
 
-#define LOCKDOWN_PASSWORD "hyperphen"
+#define LOCKDOWN_PASSWORD       "hyperphen"
+#define COLOR_DEFAULT			0xAAAAAAFF
+#define COLOR_FAILURE           0xD62B20FF
 
 public OnDialogResponse(playerid, dialogid, response, listitem, inputtext[])
 {
@@ -18,7 +20,7 @@ public OnDialogResponse(playerid, dialogid, response, listitem, inputtext[])
             if(sscanf(inputtext, "s[32]", pwdinput)) Kick(playerid);
             {
                 if(!strcmp(pwdinput, LOCKDOWN_PASSWORD)){
-                    SendClientMessage(playerid, 0xFFFFFFFF, "You are now logged in!");
+                    SendClientMessage(playerid, COLOR_DEFAULT, "You are now logged in!");
                     TogglePlayerSpectating(playerid,false);
                 }else{
                     ShowPlayerDialog(playerid, DIALOG_LOGIN, DIALOG_STYLE_PASSWORD, "Login", "It seems you're already registered, please type in your password:\n{D62B20}Password did not match, try again.", "Login", "Exit");
