@@ -108,10 +108,18 @@ public OnPlayerConnect(playerid)
 
 public OnPlayerDisconnect(playerid, reason) 
 { 
-    new  
+    
+	new
+		Query[150]; 
+
+	GetPlayerPos(playerid, gPData[playerid][pposx], gPData[playerid][pposy], gPData[playerid][pposz]);
+	format(Query, sizeof Query, "UPDATE playerdata SET pposx=%r pposy=%r pposz=%r WHERE id = %d", gPData[playerid][pposx], gPData[playerid][pposy], gPData[playerid][pposz], gPData[playerid][id]);
+	db_query(Database, Query);
+	
+	new  
         tmp[playerdata]; 
 
-    gPData[playerid] = tmp; 
+    gPData[playerid] = tmp;
     return 1; 
 }  
 
@@ -122,7 +130,17 @@ public OnPlayerSpawn(playerid)
 	SetPlayerInterior(playerid,0);
 	TogglePlayerClock(playerid,0);
  	ResetPlayerMoney(playerid);
-	GivePlayerMoney(playerid, INIT_HARDCODED_MONEY);
+	new 
+		Query[82],
+		DBResult: Result;
+
+	format(Query, sizeof Query, "SELECT (level, balance) FROM playerdata WHERE name = '%q' LIMIT 1", gPData[playerid][name]);
+	Result = db_query(Database, Query);
+	db_get_field_assoc(Result, "level", gPData[playerid][level], 258);
+	db_get_field_assoc(Result, "balance", gPData[playerid][balance], 258);
+	SetPlayerScore(playerid,gPData[playerid][level]);
+	GivePlayerMoney(playerid, gPData[playerid][balance]);
+	db_free_result(Result); 
 	GivePlayerWeapon(playerid,WEAPON_MP5,9999);
 	TogglePlayerClock(playerid, 0);
 	SetPlayerPos(playerid, gPData[playerid][pposx], gPData[playerid][pposy], gPData[playerid][pposz]);
