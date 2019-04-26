@@ -11,7 +11,7 @@ new objectmodel[500];
 COMMAND:newtobject(playerid, params[])
 {
     new oid,obj;
-    if (!sscanf(params,"i",oid))    SendClientMessage(playerid,COLOR_FAILURE,"Usage: /newtobject [object id]");
+    if (!sscanf(params,"i",oid))    return SendClientMessage(playerid,COLOR_FAILURE,"Usage: /newtobject [object id]");
     {
         new string[128];
         new Float:x, Float:y, Float:z;
@@ -29,7 +29,7 @@ COMMAND:newtobject(playerid, params[])
 COMMAND:edittobject(playerid, params[])
 {
     new oid;
-    if (!sscanf(params,"i",oid))    SendClientMessage(playerid,COLOR_FAILURE,"Usage: /edittobject [object id]");
+    if (!sscanf(params,"i",oid))    return SendClientMessage(playerid,COLOR_FAILURE,"Usage: /edittobject [object id]");
     {
         EditObject(playerid, oid);
         return 1;

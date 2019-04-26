@@ -8,7 +8,7 @@
 COMMAND:timeset(playerid,params[])
 {
     new timeid;
-    if(sscanf(params,"i",timeid)) SendClientMessage(playerid,COLOR_FAILURE,"Usage: /timeset [time id]");
+    if(sscanf(params,"i",timeid)) return SendClientMessage(playerid,COLOR_FAILURE,"Usage: /timeset [time id]");
     else SetWorldTime(timeid);
     return CMD_SUCCESS;
 }
@@ -16,7 +16,7 @@ COMMAND:timeset(playerid,params[])
 COMMAND:weatherset(playerid,params[])
 {
     new weatherid;
-    if(sscanf(params,"i",weatherid)) SendClientMessage(playerid,COLOR_FAILURE,"Usage: /weatherset [weather id]");
+    if(sscanf(params,"i",weatherid)) return SendClientMessage(playerid,COLOR_FAILURE,"Usage: /weatherset [weather id]");
     else SetWeather(weatherid);
     return CMD_SUCCESS;
 }
