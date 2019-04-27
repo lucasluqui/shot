@@ -30,8 +30,8 @@
 
 new 
     DB: Database;
-
 new gPData[MAX_PLAYERS][playerdata];
+new Text:websiteUrlTextDraw, Text:playerLevelTextDraw;
 
 stock getPname(playerid)  
 {  
@@ -114,6 +114,15 @@ public OnGameModeInit()
 	SetWeather(2);
 	SetWorldTime(11);
 	UsePlayerPedAnims();
+	websiteUrlTextDraw = TextDrawCreate(70.000000,432.000000,"www.phoenixnetwork.net");
+	TextDrawAlignment(websiteUrlTextDraw,2);
+	TextDrawBackgroundColor(websiteUrlTextDraw,0x000000ff);
+	TextDrawFont(websiteUrlTextDraw,2);
+	TextDrawLetterSize(websiteUrlTextDraw,0.199999,1.300000);
+	TextDrawColor(websiteUrlTextDraw,0xffffffff);
+	TextDrawSetOutline(websiteUrlTextDraw,1);
+	TextDrawSetProportional(websiteUrlTextDraw,1);
+	TextDrawSetShadow(websiteUrlTextDraw,1);
 
     if ((Database = db_open("players.db")) == DB: 0)
     {
@@ -160,7 +169,8 @@ public OnPlayerConnect(playerid)
     {  
         ShowPlayerDialog(playerid, DIALOG_REGISTER, DIALOG_STYLE_PASSWORD, "Register", "It appears to be your first time around, welcome! Please type in a password for your account below.", "Register", "Exit"); 
     } 
-    db_free_result(Result); 
+    db_free_result(Result);
+	TextDrawShowForPlayer(playerid, websiteUrlTextDraw);
     return 1;
 }
 
@@ -187,7 +197,7 @@ public OnPlayerSpawn(playerid)
 	if(IsPlayerNPC(playerid)) return 1;
 	
 	SetPlayerInterior(playerid,0);
-	TogglePlayerClock(playerid,0);
+	TogglePlayerClock(playerid,1);
 	if(gPData[playerid][statsSet] < 1)
 	{
 		SetPlayerPos(playerid, gPData[playerid][pposx], gPData[playerid][pposy], gPData[playerid][pposz]);
@@ -203,6 +213,18 @@ public OnPlayerSpawn(playerid)
 	}
 	SetPlayerSkin(playerid, gPData[playerid][skinid]);
 	GivePlayerWeapon(playerid,WEAPON_MP5,9999);
+
+	new string[128];
+	format(string, sizeof(string), "Level %d", gPData[playerid][level])
+	playerLevelTextDraw = TextDrawCreate(553.000000,101.000000,string);
+	TextDrawAlignment(playerLevelTextDraw,2);
+	TextDrawBackgroundColor(playerLevelTextDraw,0x000000ff);
+	TextDrawFont(playerLevelTextDraw,2);
+	TextDrawLetterSize(playerLevelTextDraw,0.299999,1.300000);
+	TextDrawColor(playerLevelTextDraw,0xffffffff);
+	TextDrawSetProportional(playerLevelTextDraw,1);
+	TextDrawSetShadow(playerLevelTextDraw,1);
+	TextDrawShowForPlayer(playerid, playerLevelTextDraw);
 
 	return 1;
 }
@@ -225,7 +247,7 @@ public OnDialogResponse(playerid, dialogid, response, listitem, inputtext[])
 				return 1;
 			}
 
-            new // a query, lucas don't forget to change the size of this if you add more stuff!
+            new
                 Query[208]; 
 
 			WP_Hash(gPData[playerid][password], 129, inputtext);
@@ -250,7 +272,6 @@ public OnDialogResponse(playerid, dialogid, response, listitem, inputtext[])
 			new 
                 buf[129];
             
-			//format(buf, sizeof buf, inputtext)
 			WP_Hash(buf, 129, inputtext);
             if (strcmp(buf, gPData[playerid][password]))
 			{
@@ -303,7 +324,7 @@ COMMAND:staff(playerid,params[])
     }
 
     new string[128], found;
-	format(string, sizeof(string), "* STAFF ONLINE:");
+	format(string, sizeof(string), "* Online Staff:");
 	SendClientMessage(playerid,COLOR_DEFAULT,string);
 
     for(new i; i < MAX_PLAYERS; i++)
@@ -359,7 +380,7 @@ COMMAND:ac(playerid,params[])
 COMMAND:stats(playerid,params[])
 {
 	new string[128];
-	SendClientMessage(playerid,COLOR_DEFAULT,"Your stats:");
+	SendClientMessage(playerid,COLOR_DEFAULT,"* Your stats:");
 	format(string, sizeof(string), "ID DB: %d | Privilege Level: %d | Level: %d | Experience: %d | Balance: %d | Skin ID: %d", gPData[playerid][id], gPData[playerid][privilege], gPData[playerid][level], gPData[playerid][xp], gPData[playerid][balance], gPData[playerid][skinid]);
 	SendClientMessage(playerid,COLOR_DEFAULT,string);
     return CMD_SUCCESS;
