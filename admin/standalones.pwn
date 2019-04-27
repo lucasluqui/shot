@@ -151,6 +151,14 @@ COMMAND:bringveh(playerid,params[])
     return CMD_SUCCESS;
 }
 
+COMMAND:kill(playerid,params[])
+{
+    new pid;
+    if(sscanf(params,"i",pid)) return SendClientMessage(playerid,COLOR_FAILURE,"Usage: /kill [player id]");
+    else SetPlayerHealth(playerid,0.0);
+    return CMD_SUCCESS;
+}
+
 COMMAND:timeset(playerid,params[])
 {
     new timeid;

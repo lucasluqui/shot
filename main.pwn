@@ -18,9 +18,11 @@
 
 #pragma tabsize 0
 
-#define INIT_HARDCODED_MONEY    69420
-#define COLOR_DEFAULT			0xAAAAAAFF
-#define COLOR_FAILURE           0xD62B20FF
+#define PLAYER_KILL_MONEY_REWARD	250
+#define PLAYER_KILL_XP_REWARD    	5
+
+#define COLOR_DEFAULT				0xAAAAAAFF
+#define COLOR_FAILURE           	0xD62B20FF
 
 
 // enums
@@ -31,13 +33,41 @@
 new 
     DB: Database;
 new gPData[MAX_PLAYERS][playerdata];
-new Text:websiteUrlTextDraw, Text:playerLevelTextDraw;
+new Text:websiteUrlTextDraw, PlayerText:playerLevelTextDraw[MAX_PLAYERS];
 
 stock getPname(playerid)  
 {  
     new pname[24];  
     GetPlayerName(playerid, pname, sizeof(pname));  
     return pname;  
+}
+
+stock calcRequiredXP(lvl)  
+{  
+    new value = 25*lvl*(1+lvl);
+    return value;  
+}
+
+stock increaseLevel(playerid)  
+{  
+    new string[128];
+	gPData[playerid][level] += 1;
+
+    PlayerTextDrawDestroy(playerid, playerLevelTextDraw[playerid]);
+	format(string, sizeof(string), "Level %d", gPData[playerid][level])
+	playerLevelTextDraw[playerid] = CreatePlayerTextDraw(playerid, 553.000000, 101.000000, string);
+	PlayerTextDrawAlignment(playerid, playerLevelTextDraw[playerid], 2);
+	PlayerTextDrawBackgroundColor(playerid, playerLevelTextDraw[playerid], 0x000000ff);
+	PlayerTextDrawFont(playerid, playerLevelTextDraw[playerid], 2);
+	PlayerTextDrawLetterSize(playerid, playerLevelTextDraw[playerid], 0.299999, 1.300000);
+	PlayerTextDrawColor(playerid, playerLevelTextDraw[playerid], 0xffffffff);
+	PlayerTextDrawSetProportional(playerid, playerLevelTextDraw[playerid], 1);
+	PlayerTextDrawSetShadow(playerid, playerLevelTextDraw[playerid], 1);
+	PlayerTextDrawShow(playerid, playerLevelTextDraw[playerid]);
+
+	SetPlayerScore(playerid,gPData[playerid][level]);
+
+	SendClientMessage(playerid,COLOR_DEFAULT,"Congratulations, you have leveled up!");
 }
 
 stock pullData(playerid)
@@ -62,6 +92,16 @@ stock pullData(playerid)
 		gPData[playerid][pposa] = db_get_field_assoc_int(Result, "pposa");
 	} 
 	db_free_result(Result);
+}
+
+stock submitData(playerid)
+{
+	new Query[300];
+
+	GetPlayerPos(playerid, gPData[playerid][pposx], gPData[playerid][pposy], gPData[playerid][pposz]);
+	GetPlayerFacingAngle(playerid, gPData[playerid][pposa]);
+	format(Query, sizeof Query, "UPDATE playerdata SET level=%d, xp=%d, balance=%d, pposx=%f, pposy=%f, pposz=%f, pposa=%f, skinid=%d WHERE id = %d", gPData[playerid][level], gPData[playerid][xp], gPData[playerid][balance], gPData[playerid][pposx], gPData[playerid][pposy], gPData[playerid][pposz], gPData[playerid][pposa], gPData[playerid][skinid], gPData[playerid][id]);
+	db_query(Database, Query);
 }
 
 stock sendToAdminChat(playerid, msg[])
@@ -114,7 +154,8 @@ public OnGameModeInit()
 	SetWeather(2);
 	SetWorldTime(11);
 	UsePlayerPedAnims();
-	websiteUrlTextDraw = TextDrawCreate(70.000000,432.000000,"www.phoenixnetwork.net");
+
+	websiteUrlTextDraw = TextDrawCreate(70.000000,432.000000,"www.~Y~p~W~hoenix~Y~n~W~etwork.net");
 	TextDrawAlignment(websiteUrlTextDraw,2);
 	TextDrawBackgroundColor(websiteUrlTextDraw,0x000000ff);
 	TextDrawFont(websiteUrlTextDraw,2);
@@ -126,7 +167,7 @@ public OnGameModeInit()
 
     if ((Database = db_open("players.db")) == DB: 0)
     {
-        print("Failed to open a connection to \"players.db\""); 
+        print("Failed to open a connection to playerdata database."); 
     } 
     else
     { 
@@ -175,15 +216,8 @@ public OnPlayerConnect(playerid)
 }
 
 public OnPlayerDisconnect(playerid, reason) 
-{ 
-    
-	new
-		Query[300]; 
-
-	GetPlayerPos(playerid, gPData[playerid][pposx], gPData[playerid][pposy], gPData[playerid][pposz]);
-	GetPlayerFacingAngle(playerid, gPData[playerid][pposa]);
-	format(Query, sizeof Query, "UPDATE playerdata SET pposx=%f, pposy=%f, pposz=%f, pposa=%f, skinid=%d WHERE id = %d", gPData[playerid][pposx], gPData[playerid][pposy], gPData[playerid][pposz], gPData[playerid][pposa], gPData[playerid][skinid], gPData[playerid][id]);
-	db_query(Database, Query);
+{
+	submitData(playerid);
 	
 	new  
         tmp[playerdata]; 
@@ -196,8 +230,6 @@ public OnPlayerSpawn(playerid)
 {
 	if(IsPlayerNPC(playerid)) return 1;
 	
-	SetPlayerInterior(playerid,0);
-	TogglePlayerClock(playerid,1);
 	if(gPData[playerid][statsSet] < 1)
 	{
 		SetPlayerPos(playerid, gPData[playerid][pposx], gPData[playerid][pposy], gPData[playerid][pposz]);
@@ -205,26 +237,33 @@ public OnPlayerSpawn(playerid)
 		SetPlayerScore(playerid,gPData[playerid][level]);
 		ResetPlayerMoney(playerid);
 		GivePlayerMoney(playerid, gPData[playerid][balance]);
+
+		new string[128];
+		format(string, sizeof(string), "Level %d", gPData[playerid][level])
+		playerLevelTextDraw[playerid] = CreatePlayerTextDraw(playerid, 553.000000, 101.000000, string);
+		PlayerTextDrawAlignment(playerid, playerLevelTextDraw[playerid], 2);
+		PlayerTextDrawBackgroundColor(playerid, playerLevelTextDraw[playerid], 0x000000ff);
+		PlayerTextDrawFont(playerid, playerLevelTextDraw[playerid], 2);
+		PlayerTextDrawLetterSize(playerid, playerLevelTextDraw[playerid], 0.299999, 1.300000);
+		PlayerTextDrawColor(playerid, playerLevelTextDraw[playerid], 0xffffffff);
+		PlayerTextDrawSetProportional(playerid, playerLevelTextDraw[playerid], 1);
+		PlayerTextDrawSetShadow(playerid, playerLevelTextDraw[playerid], 1);
+		PlayerTextDrawShow(playerid, playerLevelTextDraw[playerid]);
+
 		gPData[playerid][statsSet] = 1;
 	}
 	else
 	{
 		SetPlayerPos(playerid, 2493.9133, -1682.3986, 13.3382);
 	}
+
+	SetPlayerInterior(playerid,0);
+	TogglePlayerClock(playerid,0);
 	SetPlayerSkin(playerid, gPData[playerid][skinid]);
 	GivePlayerWeapon(playerid,WEAPON_MP5,9999);
-
-	new string[128];
-	format(string, sizeof(string), "Level %d", gPData[playerid][level])
-	playerLevelTextDraw = TextDrawCreate(553.000000,101.000000,string);
-	TextDrawAlignment(playerLevelTextDraw,2);
-	TextDrawBackgroundColor(playerLevelTextDraw,0x000000ff);
-	TextDrawFont(playerLevelTextDraw,2);
-	TextDrawLetterSize(playerLevelTextDraw,0.299999,1.300000);
-	TextDrawColor(playerLevelTextDraw,0xffffffff);
-	TextDrawSetProportional(playerLevelTextDraw,1);
-	TextDrawSetShadow(playerLevelTextDraw,1);
-	TextDrawShowForPlayer(playerid, playerLevelTextDraw);
+	GivePlayerWeapon(playerid,WEAPON_SILENCED,9999);
+	GivePlayerWeapon(playerid,WEAPON_AK47,9999);
+	GivePlayerWeapon(playerid,WEAPON_SPRAYCAN,9999);
 
 	return 1;
 }
@@ -232,6 +271,20 @@ public OnPlayerSpawn(playerid)
 public OnPlayerDeath(playerid, killerid, reason)
 { 	
 	gPData[playerid][skinid] = GetPlayerSkin(playerid);
+	
+	GivePlayerMoney(playerid, 100); // GTA automatically deducts $100 on death.
+	
+	if(killerid != INVALID_PLAYER_ID)
+	{
+		gPData[killerid][balance] += PLAYER_KILL_MONEY_REWARD;
+		GivePlayerMoney(killerid, PLAYER_KILL_MONEY_REWARD);
+		gPData[killerid][xp] += PLAYER_KILL_XP_REWARD;
+		new requiredXP = calcRequiredXP(gPData[killerid][level]);
+		if(gPData[killerid][xp] >= requiredXP)
+		{
+			increaseLevel(killerid);
+		}	
+	}
 	return 1;
 }
 
@@ -263,6 +316,7 @@ public OnDialogResponse(playerid, dialogid, response, listitem, inputtext[])
             db_free_result(Result);
 
 			pullData(playerid);
+			gPData[playerid][loggedin] = 1;
 			TogglePlayerSpectating(playerid,false);
 		}
 		case DIALOG_LOGIN:
@@ -293,7 +347,7 @@ public OnPlayerUpdate(playerid)
 	if(IsPlayerNPC(playerid)) return 1;
 	
 	// minecraft good, minigun bad
-	if(GetPlayerWeapon(playerid) == WEAPON_MINIGUN) {
+	if(GetPlayerWeapon(playerid) == WEAPON_MINIGUN && gPData[playerid][privilege] < PRIVILEGE_ADMINISTRATOR) {
 	    Kick(playerid);
 	    return 0;
 	}
@@ -381,7 +435,7 @@ COMMAND:stats(playerid,params[])
 {
 	new string[128];
 	SendClientMessage(playerid,COLOR_DEFAULT,"* Your stats:");
-	format(string, sizeof(string), "ID DB: %d | Privilege Level: %d | Level: %d | Experience: %d | Balance: %d | Skin ID: %d", gPData[playerid][id], gPData[playerid][privilege], gPData[playerid][level], gPData[playerid][xp], gPData[playerid][balance], gPData[playerid][skinid]);
+	format(string, sizeof(string), "ID DB: %d | Privilege Level: %d | Level: %d | Experience: %d/%d | Balance: %d | Skin ID: %d", gPData[playerid][id], gPData[playerid][privilege], gPData[playerid][level], gPData[playerid][xp], calcRequiredXP(gPData[playerid][level]), gPData[playerid][balance], gPData[playerid][skinid]);
 	SendClientMessage(playerid,COLOR_DEFAULT,string);
     return CMD_SUCCESS;
 }

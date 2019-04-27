@@ -11,7 +11,7 @@ new objectmodel[500];
 COMMAND:newtobject(playerid, params[])
 {
     new oid,obj;
-    if (!sscanf(params,"i",oid))    return SendClientMessage(playerid,COLOR_FAILURE,"Usage: /newtobject [object id]");
+    if (!sscanf(params,"i",oid))
     {
         new string[128];
         new Float:x, Float:y, Float:z;
@@ -24,16 +24,18 @@ COMMAND:newtobject(playerid, params[])
         EditObject(playerid, oid);
         return 1;
     }
+    return SendClientMessage(playerid,COLOR_FAILURE,"Usage: /newtobject [object id]");
 }
 
 COMMAND:edittobject(playerid, params[])
 {
     new oid;
-    if (!sscanf(params,"i",oid))    return SendClientMessage(playerid,COLOR_FAILURE,"Usage: /edittobject [object id]");
+    if (!sscanf(params,"i",oid))
     {
         EditObject(playerid, oid);
         return 1;
-    } 
+    }
+    return SendClientMessage(playerid,COLOR_FAILURE,"Usage: /edittobject [object id]");
 }
 
 public OnPlayerEditObject(playerid, playerobject, objectid, response, Float:fX, Float:fY, Float:fZ, Float:fRotX, Float:fRotY, Float:fRotZ)
