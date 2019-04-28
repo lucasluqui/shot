@@ -328,6 +328,7 @@ public OnPlayerSpawn(playerid)
 
 public OnPlayerDeath(playerid, killerid, reason)
 { 	
+	SendDeathMessage(killerid, playerid, reason);
 	gPData[playerid][skinid] = GetPlayerSkin(playerid);
 	
 	GivePlayerMoney(playerid, 100); // GTA automatically deducts $100 on death.
@@ -527,5 +528,63 @@ COMMAND:id(cmdid, playerid, params[])
 COMMAND<PRIVILEGE_LOWMODERATOR>:a(cmdid, playerid, params[])
 {
     sendToAdminChat(playerid, params);
+    return CMD_SUCCESS;
+}
+
+COMMAND<PRIVILEGE_LOWMODERATOR>:adminmode(cmdid, playerid, params[])
+{
+    if(gPData[playerid][adminEnabled])
+	{
+		SetPlayerHealth(playerid, 100);
+		SendClientMessage(playerid,COLOR_DEFAULT,"Admin mode toggled OFF.");
+		SetPlayerColor(playerid, COLOR_DEFAULT);
+		gPData[playerid][adminEnabled] = 0;
+	}
+	else
+	{
+		SetPlayerHealth(playerid, Float:0x7F800000);
+		SendClientMessage(playerid,COLOR_DEFAULT,"Admin mode toggled ON.");
+		SetPlayerColor(playerid, COLOR_FAILURE);
+		gPData[playerid][adminEnabled] = 1;
+	}
+    return CMD_SUCCESS;
+}
+ALT:am = CMD:adminmode;
+
+COMMAND<PRIVILEGE_ADMINISTRATOR>:setprivilege(cmdid, playerid, params[])
+{
+    new pid, priv;
+	if (sscanf(params, "ud", pid, priv)) SendClientMessage(playerid,COLOR_FAILURE,"Usage: /setprivilege [player id] [privilege]");
+	{
+		new Query[128], string[128], pname[MAX_PLAYER_NAME], tname[MAX_PLAYER_NAME];
+		gPData[pid][privilege] = priv;
+		format(Query, sizeof Query, "UPDATE playerdata SET privilege=%d WHERE id = %d", gPData[playerid][privilege], gPData[playerid][id]);
+		db_query(Database, Query);
+		GetPlayerName(pid, pname, sizeof(pname));
+		GetPlayerName(playerid, tname, sizeof(tname));
+		format(string, sizeof string, "Administration: %s has set your rank to %s.", tname, getPrivilegeName(pid));
+		SendClientMessage(pid, COLOR_DEFAULT, string);
+		format(string, sizeof string, "Administration: You have set %s rank to %s.", pname, getPrivilegeName(pid));
+		SendClientMessage(playerid, COLOR_DEFAULT, string);
+	}
+    return CMD_SUCCESS;
+}
+
+COMMAND<PRIVILEGE_ADMINISTRATOR>:staffpromote(cmdid, playerid, params[])
+{
+    new pid;
+	if (sscanf(params, "u", pid)) SendClientMessage(playerid,COLOR_FAILURE,"Usage: /staffpromote [player id]");
+	{
+		new Query[128], string[128], pname[MAX_PLAYER_NAME], tname[MAX_PLAYER_NAME];
+		gPData[pid][privilege] += 1;
+		format(Query, sizeof Query, "UPDATE playerdata SET privilege=%d WHERE id = %d", gPData[playerid][privilege], gPData[playerid][id]);
+		db_query(Database, Query);
+		GetPlayerName(pid, pname, sizeof(pname));
+		GetPlayerName(playerid, tname, sizeof(tname));
+		format(string, sizeof string, "Administration: %s has promoted you to %s.", tname, getPrivilegeName(pid));
+		SendClientMessage(pid, COLOR_DEFAULT, string);
+		format(string, sizeof string, "Administration: You have promoted %s to %s.", pname, getPrivilegeName(pid));
+		SendClientMessage(playerid, COLOR_DEFAULT, string);
+	}
     return CMD_SUCCESS;
 }

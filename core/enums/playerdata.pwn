@@ -16,5 +16,6 @@ enum playerdata
     Float:pposz,
     Float:pposa, 
     loggedin,
-    statsSet
+    statsSet,
+    adminEnabled
 }
