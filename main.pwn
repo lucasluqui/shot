@@ -20,7 +20,13 @@
 
 #define COLOR_DEFAULT				0xAAAAAAFF
 #define COLOR_FAILURE           	0xD62B20FF
-#define COLOR_ADMINCHAT           	0x2D6CBFFF
+#define COLOR_ADMINCHAT           	0x2A74D6FF
+
+#define COLOR_PRIVILEGE_LOWMODERATOR           	"E0914C"
+#define COLOR_PRIVILEGE_MIDMODERATOR           	"E67E22"
+#define COLOR_PRIVILEGE_HIGHMODERATOR           "C96A16"
+#define COLOR_PRIVILEGE_ADMINISTRATOR           "E74C3C"
+#define COLOR_PRIVILEGE_FOUNDER           		"CC392A"
 
 
 // enums
@@ -136,12 +142,56 @@ public isCash(playerid)
 	return 0;
 }
 
+stock getPrivilegeName(playerid)
+{
+	new prname[64];
+	switch(gPData[playerid][privilege])
+	{
+		case PRIVILEGE_LOWMODERATOR:{prname = "Novice Staff";}
+		case PRIVILEGE_MIDMODERATOR:{prname = "Staff";}
+		case PRIVILEGE_HIGHMODERATOR:{prname = "High Staff";}
+		case PRIVILEGE_ADMINISTRATOR:{prname = "Administrator";}
+		case PRIVILEGE_FOUNDER:{prname = "Founder";}
+		default:{prname = "None";}
+	}
+	return prname;
+}
+
+stock getPrivilegeColor(playerid)
+{
+	new prcolor[64];
+	switch(gPData[playerid][privilege])
+	{
+		case PRIVILEGE_LOWMODERATOR:{prcolor = COLOR_PRIVILEGE_LOWMODERATOR;}
+		case PRIVILEGE_MIDMODERATOR:{prcolor = COLOR_PRIVILEGE_MIDMODERATOR;}
+		case PRIVILEGE_HIGHMODERATOR:{prcolor = COLOR_PRIVILEGE_HIGHMODERATOR;}
+		case PRIVILEGE_ADMINISTRATOR:{prcolor = COLOR_PRIVILEGE_ADMINISTRATOR;}
+		case PRIVILEGE_FOUNDER:{prcolor = COLOR_PRIVILEGE_FOUNDER;}
+		default:{prcolor = "";}
+	}
+	return prcolor;
+}
+
+stock getMembershipName(playerid)
+{
+	new mbname[64];
+	switch(gPData[playerid][membership])
+	{
+		case MEMBERSHIP_CASH:{mbname = "VIP";}
+		case MEMBERSHIP_BIGCASH:{mbname = "VIP+";}
+		default:{mbname = "None";}
+	}
+	return mbname;
+}
+
 forward increaseLevel(playerid);
 forward pullData(playerid);
 forward submitData(playerid);
 forward sendToAdminChat(playerid, msg[]);
 forward isStaff(playerid);
 forward isCash(playerid);
+forward getPrivilegeName(playerid);
+forward getMembershipName(playerid);
 native WP_Hash(buffer[], len, const str[]);
 
 main()
@@ -430,35 +480,8 @@ COMMAND:staff(cmdid, playerid, params[])
 		{
 			new pname[MAX_PLAYER_NAME];
         	GetPlayerName(i, pname, sizeof(pname));
-			switch(gPData[i][privilege])
-			{
-				case PRIVILEGE_LOWMODERATOR:
-				{
-					format(string, sizeof(string), "{E0914C}** Novice Staff %s (ID: %d)", pname, i);
-					SendClientMessage(playerid,COLOR_DEFAULT,string);
-				}
-				case PRIVILEGE_MIDMODERATOR:
-				{
-					format(string, sizeof(string), "{E67E22}** Staff %s (ID: %d)", pname, i);
-					SendClientMessage(playerid,COLOR_DEFAULT,string);
-				}
-				case PRIVILEGE_HIGHMODERATOR:
-				{
-					format(string, sizeof(string), "{C96A16}** High Staff %s (ID: %d)", pname, i);
-					SendClientMessage(playerid,COLOR_DEFAULT,string);
-				}
-				case PRIVILEGE_ADMINISTRATOR:
-				{
-					format(string, sizeof(string), "{E74C3C}** Administrator %s (ID: %d)", pname, i);
-					SendClientMessage(playerid,COLOR_DEFAULT,string);
-				}
-				case PRIVILEGE_FOUNDER:
-				{
-					format(string, sizeof(string), "{CC392A}** Founder %s (ID: %d)", pname, i);
-					SendClientMessage(playerid,COLOR_DEFAULT,string);
-				}
-				default: return CMD_SUCCESS;
-			}
+			format(string, sizeof(string), "{%s}** %s %s (ID: %d)", getPrivilegeColor(playerid), getPrivilegeName(playerid), pname, i);
+			SendClientMessage(playerid,COLOR_DEFAULT,string);
             found++;
         }
     }
@@ -472,8 +495,32 @@ COMMAND:stats(cmdid, playerid, params[])
 {
 	new string[128];
 	SendClientMessage(playerid,COLOR_DEFAULT,"* Your stats:");
-	format(string, sizeof(string), "ID DB: %d | Privilege: %d | Membership: %d | Level: %d | Experience: %d/%d | Balance: %d | Skin ID: %d", gPData[playerid][id], gPData[playerid][privilege], gPData[playerid][membership], gPData[playerid][level], gPData[playerid][xp], calcRequiredXP(gPData[playerid][level]), gPData[playerid][balance], gPData[playerid][skinid]);
+	format(string, sizeof(string), "ID DB: %d | Rank: %s | Membership: %s | Level: %d | Experience: %d/%d | Balance: %d | Skin ID: %d", gPData[playerid][id], getPrivilegeName(playerid), getMembershipName(playerid), gPData[playerid][level], gPData[playerid][xp], calcRequiredXP(gPData[playerid][level]), gPData[playerid][balance], gPData[playerid][skinid]);
 	SendClientMessage(playerid,COLOR_DEFAULT,string);
+    return CMD_SUCCESS;
+}
+
+COMMAND:id(cmdid, playerid, params[])
+{
+    if(isnull(params)) {
+        return SendClientMessage(playerid,COLOR_FAILURE,"Usage: /id [name]");
+    }
+
+    new string[128], found;
+
+    for(new i; i < MAX_PLAYERS; i++)
+    {
+        new pname[MAX_PLAYER_NAME];
+        GetPlayerName(i, pname, sizeof(pname));
+        if(strfind(pname, params, true) != -1) {
+            format(string, sizeof(string), "%s (ID: %d) (Level: %d)", pname, i, gPData[i][level]);
+            SendClientMessage(playerid,COLOR_DEFAULT,string);
+            found++;
+        }
+    }
+    if(found == 0){
+        SendClientMessage(playerid,COLOR_DEFAULT,"No players found.");
+    }
     return CMD_SUCCESS;
 }
 

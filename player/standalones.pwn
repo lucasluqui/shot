@@ -34,30 +34,6 @@ COMMAND:veh(cmdid, playerid, params[])
     return CMD_SUCCESS;
 }
 
-COMMAND:id(cmdid, playerid, params[])
-{
-    if(isnull(params)) {
-        return SendClientMessage(playerid,COLOR_FAILURE,"Usage: /id [name]");
-    }
-
-    new string[128], found;
-
-    for(new i; i < MAX_PLAYERS; i++)
-    {
-        new pname[MAX_PLAYER_NAME];
-        GetPlayerName(i, pname, sizeof(pname));
-        if(strfind(pname, params, true) != -1) {
-            format(string, sizeof(string), "%s (ID: %d)", pname, i);
-            SendClientMessage(playerid,COLOR_DEFAULT,string);
-            found++;
-        }
-    }
-    if(found == 0){
-        SendClientMessage(playerid,COLOR_DEFAULT,"No players found.");
-    }
-    return CMD_SUCCESS;
-}
-
 COMMAND:skin(cmdid, playerid, params[])
 {
     new sid, string[128];
