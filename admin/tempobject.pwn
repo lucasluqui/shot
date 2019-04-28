@@ -1,5 +1,5 @@
 #include <a_samp>
-#include <izcmd>
+#include <smartcmd>
 #include <sscanf2>
 
 #define COLOR_DEFAULT			0xAAAAAAFF
@@ -8,7 +8,7 @@
 new objects;
 new objectmodel[500];
 
-COMMAND:newtobject(playerid, params[])
+COMMAND<PRIVILEGE_ADMINISTRATOR>:newtobject(cmdid, playerid, params[])
 {
     new oid,obj;
     if (!sscanf(params,"i",oid))
@@ -27,7 +27,7 @@ COMMAND:newtobject(playerid, params[])
     return SendClientMessage(playerid,COLOR_FAILURE,"Usage: /newtobject [object id]");
 }
 
-COMMAND:edittobject(playerid, params[])
+COMMAND<PRIVILEGE_ADMINISTRATOR>:edittobject(cmdid, playerid, params[])
 {
     new oid;
     if (!sscanf(params,"i",oid))

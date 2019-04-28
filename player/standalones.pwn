@@ -1,12 +1,12 @@
 #include <a_samp>
 #include <float>
-#include <izcmd>
+#include <smartcmd>
 #include <sscanf2>
 
 #define COLOR_DEFAULT			0xAAAAAAFF
 #define COLOR_FAILURE           0xD62B20FF
 
-COMMAND:veh(playerid,params[])
+COMMAND:veh(cmdid, playerid, params[])
 {
     new vid, distance, string[128], Float:x, Float:y, Float:z, Float:a;
     distance = 5;
@@ -34,7 +34,7 @@ COMMAND:veh(playerid,params[])
     return CMD_SUCCESS;
 }
 
-COMMAND:id(playerid,params[])
+COMMAND:id(cmdid, playerid, params[])
 {
     if(isnull(params)) {
         return SendClientMessage(playerid,COLOR_FAILURE,"Usage: /id [name]");
@@ -58,7 +58,7 @@ COMMAND:id(playerid,params[])
     return CMD_SUCCESS;
 }
 
-COMMAND:skin(playerid,params[])
+COMMAND:skin(cmdid, playerid, params[])
 {
     new sid, string[128];
     if(sscanf(params,"i",sid)) return SendClientMessage(playerid,COLOR_FAILURE,"Usage: /skin [skin id]");
@@ -70,7 +70,7 @@ COMMAND:skin(playerid,params[])
     return CMD_SUCCESS;
 }
 
-COMMAND:wep(playerid,params[])
+COMMAND:wep(cmdid, playerid, params[])
 {
     new wid, string[128];
     if(sscanf(params,"i",wid)) return SendClientMessage(playerid,COLOR_FAILURE,"Usage: /wep [weapon id]");
@@ -82,7 +82,7 @@ COMMAND:wep(playerid,params[])
     return CMD_SUCCESS;
 }
 
-CMD:repair(playerid, params[])
+CMD:repair(cmdid, playerid, params[])
 {
     if(!IsPlayerInAnyVehicle(playerid)) return SendClientMessage(playerid, COLOR_FAILURE, "You are not in a vehicle.");
     if(GetPlayerState(playerid) != 2) return SendClientMessage(playerid, COLOR_FAILURE, "You are not in the driver seat.");
@@ -92,7 +92,7 @@ CMD:repair(playerid, params[])
     return 1;
 }
 
-CMD:nitro(playerid, params[])
+CMD:nitro(cmdid, playerid, params[])
 {
     if(!IsPlayerInAnyVehicle(playerid)) return SendClientMessage(playerid, COLOR_FAILURE, "You are not in a vehicle.");
     if(GetPlayerState(playerid) != 2) return SendClientMessage(playerid, COLOR_FAILURE, "You are not in the driver seat.");

@@ -5,6 +5,7 @@ enum playerdata
     id,  
     name[MAX_PLAYER_NAME],  
     password[129],
+    membership,
     privilege,
     level,
     xp,

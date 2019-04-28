@@ -3,11 +3,8 @@
 #include <float>
 
 // useful command libraries
-#include <izcmd>
+#include <smartcmd>
 #include <sscanf2>
-
-// core handlers and misc
-#include "core/handlecmd.pwn"
 
 // admin commands
 #include "admin/standalones.pwn"
@@ -29,6 +26,7 @@
 #include "core/enums/dialogs.pwn"
 #include "core/enums/playerdata.pwn"
 #include "core/enums/privileges.pwn"
+#include "core/enums/memberships.pwn"
 
 new 
     DB: Database;
@@ -48,7 +46,7 @@ stock calcRequiredXP(lvl)
     return value;  
 }
 
-stock increaseLevel(playerid)  
+public increaseLevel(playerid)  
 {  
     new string[128];
 	gPData[playerid][level] += 1;
@@ -70,7 +68,7 @@ stock increaseLevel(playerid)
 	SendClientMessage(playerid,COLOR_DEFAULT,"Congratulations, you have leveled up!");
 }
 
-stock pullData(playerid)
+public pullData(playerid)
 {
 	new 
 	DBResult: Result, buf[129];
@@ -82,6 +80,7 @@ stock pullData(playerid)
 	{
 		gPData[playerid][id] = db_get_field_assoc_int(Result, "id");
 		gPData[playerid][privilege] = db_get_field_assoc_int(Result, "privilege");
+		gPData[playerid][membership] = db_get_field_assoc_int(Result, "membership");
 		gPData[playerid][level] = db_get_field_assoc_int(Result, "level");
 		gPData[playerid][xp] = db_get_field_assoc_int(Result, "xp");
 		gPData[playerid][balance] = db_get_field_assoc_int(Result, "balance");
@@ -94,7 +93,7 @@ stock pullData(playerid)
 	db_free_result(Result);
 }
 
-stock submitData(playerid)
+public submitData(playerid)
 {
 	new Query[300];
 
@@ -104,7 +103,7 @@ stock submitData(playerid)
 	db_query(Database, Query);
 }
 
-stock sendToAdminChat(playerid, msg[])
+public sendToAdminChat(playerid, msg[])
 {
 	new pname[MAX_PLAYER_NAME], string[128];
 	GetPlayerName(playerid, pname, sizeof(pname));
@@ -118,7 +117,7 @@ stock sendToAdminChat(playerid, msg[])
     }
 }
 
-stock isStaff(playerid)
+public isStaff(playerid)
 {
 	if(gPData[playerid][privilege] >= PRIVILEGE_LOWMODERATOR)
 	{
@@ -127,15 +126,21 @@ stock isStaff(playerid)
 	return 0;
 }
 
-stock isCash(playerid)
+public isCash(playerid)
 {
-	if(PRIVILEGE_LOWMODERATOR > gPData[playerid][privilege] >= PRIVILEGE_CASH)
+	if(gPData[playerid][membership] >= MEMBERSHIP_CASH)
 	{
 		return 1;
 	}
 	return 0;
 }
 
+forward increaseLevel(playerid);
+forward pullData(playerid);
+forward submitData(playerid);
+forward sendToAdminChat(playerid, msg[]);
+forward isStaff(playerid);
+forward isCash(playerid);
 native WP_Hash(buffer[], len, const str[]);
 
 main()
@@ -171,8 +176,10 @@ public OnGameModeInit()
     } 
     else
     { 
-        db_query(Database, "PRAGMA synchronous = OFF"); 
-        db_query(Database, "CREATE TABLE IF NOT EXISTS playerdata (id INTEGER PRIMARY KEY AUTOINCREMENT, name VARCHAR(24) COLLATE NOCASE, password VARCHAR(129), privilege INTEGER DEFAULT 0 NOT NULL, level INTEGER DEFAULT 1 NOT NULL, xp INTEGER DEFAULT 0 NOT NULL, balance INTEGER DEFAULT 2500 NOT NULL, skinid INTEGER DEFAULT 73 NOT NULL, pposx REAL DEFAULT 0.0 NOT NULL, pposy REAL DEFAULT 0.0 NOT NULL, pposz REAL DEFAULT 0.0 NOT NULL, pposa REAL DEFAULT 0.0 NOT NULL)"); 
+        db_query(Database, "PRAGMA synchronous = OFF");
+		new createTable[600] = "CREATE TABLE IF NOT EXISTS playerdata (id INTEGER PRIMARY KEY AUTOINCREMENT, name VARCHAR(24) COLLATE NOCASE, password VARCHAR(129), privilege INTEGER DEFAULT 0 NOT NULL, membership INTEGER DEFAULT 0 NOT NULL, level INTEGER DEFAULT 1 NOT NULL, xp INTEGER DEFAULT 0 NOT NULL,";
+		strcat(createTable, " balance INTEGER DEFAULT 2500 NOT NULL, skinid INTEGER DEFAULT 73 NOT NULL, pposx REAL DEFAULT 0.0 NOT NULL, pposy REAL DEFAULT 0.0 NOT NULL, pposz REAL DEFAULT 0.0 NOT NULL, pposa REAL DEFAULT 0.0 NOT NULL)");
+        db_query(Database, createTable);
     } 
     return 1; 
 }
@@ -371,7 +378,61 @@ public OnPlayerGiveDamage(playerid, damagedid, Float:amount, weaponid, bodypart)
     return 1;
 }
 
-COMMAND:staff(playerid,params[])
+public OnPlayerCommandReceived(cmdid, playerid, cmdtext[])
+{
+	new playerState = GetPlayerState(playerid);
+    if (playerState != PLAYER_STATE_SPECTATING && playerState != PLAYER_STATE_WASTED)
+    {
+        if(GetCommandFlags(cmdid) == PRIVILEGE_LOWMODERATOR)
+        {
+			if(isStaff(playerid))
+			{
+				return 1;
+			}
+			else
+			{
+				SendClientMessage(playerid,COLOR_FAILURE,"You do not met the requirements to execute this command.")
+				return 0;
+			}
+        }
+        if(GetCommandFlags(cmdid) == PRIVILEGE_ADMINISTRATOR)
+        {
+			if(isStaff(playerid))
+			{
+				return 1;
+			}
+			else
+			{
+				SendClientMessage(playerid,COLOR_FAILURE,"You do not met the requirements to execute this command.")
+				return 0;
+			}
+        }
+		else
+		{
+			return 1;
+		}
+    }
+    SendClientMessage(playerid,COLOR_FAILURE,"You can not input commands right now.")
+    return 0;
+}
+
+public OnPlayerCommandPerformed(cmdid, playerid, cmdtext[], success) {
+    if (!success) {
+        new string[128];
+        format(string, sizeof(string), "Command %s not found.", cmdtext);
+        SendClientMessage(playerid,COLOR_FAILURE,string);
+    }
+    return 1;
+}
+
+
+
+
+
+
+
+
+COMMAND:staff(cmdid, playerid, params[])
 {
     if(!isnull(params)) {
         return SendClientMessage(playerid,COLOR_FAILURE,"No parameters required.");
@@ -425,17 +486,17 @@ COMMAND:staff(playerid,params[])
     return CMD_SUCCESS;
 }
 
-COMMAND:ac(playerid,params[])
-{
-    sendToAdminChat(playerid, params);
-    return CMD_SUCCESS;
-}
-
-COMMAND:stats(playerid,params[])
+COMMAND:stats(cmdid, playerid, params[])
 {
 	new string[128];
 	SendClientMessage(playerid,COLOR_DEFAULT,"* Your stats:");
-	format(string, sizeof(string), "ID DB: %d | Privilege Level: %d | Level: %d | Experience: %d/%d | Balance: %d | Skin ID: %d", gPData[playerid][id], gPData[playerid][privilege], gPData[playerid][level], gPData[playerid][xp], calcRequiredXP(gPData[playerid][level]), gPData[playerid][balance], gPData[playerid][skinid]);
+	format(string, sizeof(string), "ID DB: %d | Privilege: %d | Membership: %d | Level: %d | Experience: %d/%d | Balance: %d | Skin ID: %d", gPData[playerid][id], gPData[playerid][privilege], gPData[playerid][membership], gPData[playerid][level], gPData[playerid][xp], calcRequiredXP(gPData[playerid][level]), gPData[playerid][balance], gPData[playerid][skinid]);
 	SendClientMessage(playerid,COLOR_DEFAULT,string);
+    return CMD_SUCCESS;
+}
+
+COMMAND<PRIVILEGE_LOWMODERATOR>:a(cmdid, playerid, params[])
+{
+    sendToAdminChat(playerid, params);
     return CMD_SUCCESS;
 }

@@ -1,12 +1,14 @@
 #include <a_samp>
 #include <float>
-#include <izcmd>
+#include <smartcmd>
 #include <sscanf2>
+
+#include "core/enums/privileges.pwn"
 
 #define COLOR_DEFAULT			0xAAAAAAFF
 #define COLOR_FAILURE           0xD62B20FF
 
-COMMAND:tp(playerid,params[])
+COMMAND<PRIVILEGE_LOWMODERATOR>:tp(cmdid, playerid, params[])
 {
     if(isnull(params)) {
         return SendClientMessage(playerid,COLOR_FAILURE,"Usage: /tp [playername]");
@@ -51,7 +53,7 @@ COMMAND:tp(playerid,params[])
     return CMD_SUCCESS;
 }
 
-COMMAND:bring(playerid,params[])
+COMMAND<PRIVILEGE_LOWMODERATOR>:bring(cmdid, playerid, params[])
 {
     if(isnull(params)) {
         return SendClientMessage(playerid,COLOR_FAILURE,"Usage: /bring [playername]");
@@ -96,7 +98,7 @@ COMMAND:bring(playerid,params[])
     return CMD_SUCCESS;
 }
 
-COMMAND:otp(playerid,params[])
+COMMAND<PRIVILEGE_LOWMODERATOR>:otp(cmdid, playerid, params[])
 {
     new pid, target[MAX_PLAYER_NAME], invoker[MAX_PLAYER_NAME], string[128], Float:x, Float:y, Float:z;
     if(sscanf(params,"i",pid)) return SendClientMessage(playerid,COLOR_FAILURE,"Usage: /otp [player id]");
@@ -111,7 +113,7 @@ COMMAND:otp(playerid,params[])
     return CMD_SUCCESS;
 }
 
-COMMAND:obring(playerid,params[])
+COMMAND<PRIVILEGE_LOWMODERATOR>:obring(cmdid, playerid, params[])
 {
     new pid, target[MAX_PLAYER_NAME], invoker[MAX_PLAYER_NAME], string[128], Float:x, Float:y, Float:z;
     if(sscanf(params,"i",pid)) return SendClientMessage(playerid,COLOR_FAILURE,"Usage: /obring [player id]");
@@ -126,7 +128,7 @@ COMMAND:obring(playerid,params[])
     return CMD_SUCCESS;
 }
 
-COMMAND:bringveh(playerid,params[])
+COMMAND<PRIVILEGE_LOWMODERATOR>:bringveh(cmdid, playerid, params[])
 {
     new vid, distance, string[128], Float:x, Float:y, Float:z, Float:a;
     if(sscanf(params,"i",vid)) return SendClientMessage(playerid,COLOR_FAILURE,"Usage: /bringveh [vehicle id]");
@@ -151,7 +153,7 @@ COMMAND:bringveh(playerid,params[])
     return CMD_SUCCESS;
 }
 
-COMMAND:kill(playerid,params[])
+COMMAND<PRIVILEGE_ADMINISTRATOR>:kill(cmdid, playerid, params[])
 {
     new pid;
     if(sscanf(params,"i",pid)) return SendClientMessage(playerid,COLOR_FAILURE,"Usage: /kill [player id]");
@@ -159,7 +161,7 @@ COMMAND:kill(playerid,params[])
     return CMD_SUCCESS;
 }
 
-COMMAND:timeset(playerid,params[])
+COMMAND<PRIVILEGE_ADMINISTRATOR>:timeset(cmdid, playerid, params[])
 {
     new timeid;
     if(sscanf(params,"i",timeid)) return SendClientMessage(playerid,COLOR_FAILURE,"Usage: /timeset [time id]");
@@ -167,7 +169,7 @@ COMMAND:timeset(playerid,params[])
     return CMD_SUCCESS;
 }
 
-COMMAND:weatherset(playerid,params[])
+COMMAND<PRIVILEGE_ADMINISTRATOR>:weatherset(cmdid, playerid, params[])
 {
     new weatherid;
     if(sscanf(params,"i",weatherid)) return SendClientMessage(playerid,COLOR_FAILURE,"Usage: /weatherset [weather id]");
