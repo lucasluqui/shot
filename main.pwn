@@ -20,6 +20,7 @@
 
 #define COLOR_DEFAULT				0xAAAAAAFF
 #define COLOR_FAILURE           	0xD62B20FF
+#define COLOR_ADMINCHAT           	0x2D6CBFFF
 
 
 // enums
@@ -112,7 +113,7 @@ public sendToAdminChat(playerid, msg[])
         if(isStaff(i))
 		{
 			format(string, sizeof string, "Administration: %s: %s", pname, msg);
-			SendClientMessage(i,COLOR_DEFAULT,string);
+			SendClientMessage(i,COLOR_ADMINCHAT,string);
         }
     }
 }
@@ -383,36 +384,17 @@ public OnPlayerCommandReceived(cmdid, playerid, cmdtext[])
 	new playerState = GetPlayerState(playerid);
     if (playerState != PLAYER_STATE_SPECTATING && playerState != PLAYER_STATE_WASTED)
     {
-        if(GetCommandFlags(cmdid) == PRIVILEGE_LOWMODERATOR)
+        if(GetCommandFlags(cmdid) <= gPData[playerid][privilege] || GetCommandFlags(cmdid) <= gPData[playerid][membership])
         {
-			if(isStaff(playerid))
-			{
-				return 1;
-			}
-			else
-			{
-				SendClientMessage(playerid,COLOR_FAILURE,"You do not met the requirements to execute this command.")
-				return 0;
-			}
-        }
-        if(GetCommandFlags(cmdid) == PRIVILEGE_ADMINISTRATOR)
-        {
-			if(isStaff(playerid))
-			{
-				return 1;
-			}
-			else
-			{
-				SendClientMessage(playerid,COLOR_FAILURE,"You do not met the requirements to execute this command.")
-				return 0;
-			}
-        }
-		else
-		{
 			return 1;
 		}
+		else
+		{
+			SendClientMessage(playerid,COLOR_FAILURE,"You do not met the requirements to execute this command.");
+			return 0;
+		}
     }
-    SendClientMessage(playerid,COLOR_FAILURE,"You can not input commands right now.")
+    SendClientMessage(playerid,COLOR_FAILURE,"You can not input commands right now.");
     return 0;
 }
 
@@ -452,7 +434,7 @@ COMMAND:staff(cmdid, playerid, params[])
 			{
 				case PRIVILEGE_LOWMODERATOR:
 				{
-					format(string, sizeof(string), "{E67E22}** Moderator (1) %s (ID: %d)", pname, i);
+					format(string, sizeof(string), "{E0914C}** Novice Staff %s (ID: %d)", pname, i);
 					SendClientMessage(playerid,COLOR_DEFAULT,string);
 				}
 				case PRIVILEGE_MIDMODERATOR:
@@ -462,7 +444,7 @@ COMMAND:staff(cmdid, playerid, params[])
 				}
 				case PRIVILEGE_HIGHMODERATOR:
 				{
-					format(string, sizeof(string), "{E67E22}** Moderator (3) %s (ID: %d)", pname, i);
+					format(string, sizeof(string), "{C96A16}** High Staff %s (ID: %d)", pname, i);
 					SendClientMessage(playerid,COLOR_DEFAULT,string);
 				}
 				case PRIVILEGE_ADMINISTRATOR:
@@ -472,7 +454,7 @@ COMMAND:staff(cmdid, playerid, params[])
 				}
 				case PRIVILEGE_FOUNDER:
 				{
-					format(string, sizeof(string), "{E74C3C}** Founder %s (ID: %d)", pname, i);
+					format(string, sizeof(string), "{CC392A}** Founder %s (ID: %d)", pname, i);
 					SendClientMessage(playerid,COLOR_DEFAULT,string);
 				}
 				default: return CMD_SUCCESS;

@@ -1,5 +1,5 @@
 enum memberships
 {
-    MEMBERSHIP_CASH = 10,
-    MEMBERSHIP_BIGCASH = 11
+    MEMBERSHIP_CASH = 1,
+    MEMBERSHIP_BIGCASH = 2
 }
