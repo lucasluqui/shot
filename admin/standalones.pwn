@@ -101,6 +101,13 @@ COMMAND<PRIVILEGE_LOWMODERATOR>:bring(cmdid, playerid, params[])
 COMMAND<PRIVILEGE_LOWMODERATOR>:otp(cmdid, playerid, params[])
 {
     new pid, target[MAX_PLAYER_NAME], invoker[MAX_PLAYER_NAME], string[128], Float:x, Float:y, Float:z;
+    
+    if(pid == INVALID_PLAYER_ID)
+    {
+        SendClientMessage(playerid, COLOR_FAILURE, "Player not found.");
+        return CMD_SUCCESS;
+    }
+    
     if(sscanf(params,"i",pid)) return SendClientMessage(playerid,COLOR_FAILURE,"Usage: /otp [player id]");
     GetPlayerPos(pid, x, y, z);
     SetPlayerPos(playerid, x+2, y, z+2);
@@ -116,6 +123,13 @@ COMMAND<PRIVILEGE_LOWMODERATOR>:otp(cmdid, playerid, params[])
 COMMAND<PRIVILEGE_LOWMODERATOR>:obring(cmdid, playerid, params[])
 {
     new pid, target[MAX_PLAYER_NAME], invoker[MAX_PLAYER_NAME], string[128], Float:x, Float:y, Float:z;
+    
+    if(pid == INVALID_PLAYER_ID)
+    {
+        SendClientMessage(playerid, COLOR_FAILURE, "Player not found.");
+        return CMD_SUCCESS;
+    }
+    
     if(sscanf(params,"i",pid)) return SendClientMessage(playerid,COLOR_FAILURE,"Usage: /obring [player id]");
     GetPlayerPos(playerid, x, y, z);
     SetPlayerPos(pid, x+2, y, z+2);
@@ -157,7 +171,14 @@ COMMAND<PRIVILEGE_ADMINISTRATOR>:kill(cmdid, playerid, params[])
 {
     new pid;
     if(sscanf(params,"i",pid)) return SendClientMessage(playerid,COLOR_FAILURE,"Usage: /kill [player id]");
-    else SetPlayerHealth(playerid,0.0);
+    
+    if(pid == INVALID_PLAYER_ID)
+    {
+        SendClientMessage(playerid, COLOR_FAILURE, "Player not found.");
+        return CMD_SUCCESS;
+    }
+    
+    else SetPlayerHealth(pid,0.0);
     return CMD_SUCCESS;
 }
 

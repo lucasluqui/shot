@@ -503,7 +503,8 @@ COMMAND:stats(cmdid, playerid, params[])
 
 COMMAND:id(cmdid, playerid, params[])
 {
-    if(isnull(params)) {
+    if(isnull(params))
+	{
         return SendClientMessage(playerid,COLOR_FAILURE,"Usage: /id [name]");
     }
 
@@ -519,9 +520,35 @@ COMMAND:id(cmdid, playerid, params[])
             found++;
         }
     }
-    if(found == 0){
+    if(found == 0)
+	{
         SendClientMessage(playerid,COLOR_DEFAULT,"No players found.");
     }
+    return CMD_SUCCESS;
+}
+
+COMMAND:w(cmdid, playerid, params[])
+{
+    new pid, msg[128];
+	if(sscanf(params, "us", pid, msg)) SendClientMessage(playerid,COLOR_FAILURE,"Usage: /w [staff id] [message]");
+	{
+		if(pid == INVALID_PLAYER_ID)
+		{
+			SendClientMessage(playerid, COLOR_FAILURE, "Player not found.");
+			return CMD_SUCCESS;
+		}
+		if(isStaff(pid) || isStaff(playerid))
+		{
+			new string[128], pname[MAX_PLAYER_NAME];
+			GetPlayerName(pid, pname, sizeof(pname));
+			format(string, sizeof string, "Administration: %s (ID: %d) whispers: %s", pname, playerid, msg);
+			SendClientMessage(pid, COLOR_DEFAULT, string);
+		}
+		else
+		{
+			SendClientMessage(playerid, COLOR_FAILURE, "You can only whisper staff members. (/staff)");
+		}
+	}
     return CMD_SUCCESS;
 }
 
@@ -556,6 +583,11 @@ COMMAND<PRIVILEGE_ADMINISTRATOR>:setprivilege(cmdid, playerid, params[])
     new pid, priv;
 	if (sscanf(params, "ud", pid, priv)) SendClientMessage(playerid,COLOR_FAILURE,"Usage: /setprivilege [player id] [privilege]");
 	{
+		if(pid == INVALID_PLAYER_ID)
+		{
+			SendClientMessage(playerid, COLOR_FAILURE, "Player not found.");
+			return CMD_SUCCESS;
+		}
 		new Query[128], string[128], pname[MAX_PLAYER_NAME], tname[MAX_PLAYER_NAME];
 		gPData[pid][privilege] = priv;
 		format(Query, sizeof Query, "UPDATE playerdata SET privilege=%d WHERE id = %d", gPData[playerid][privilege], gPData[playerid][id]);
@@ -575,6 +607,11 @@ COMMAND<PRIVILEGE_ADMINISTRATOR>:staffpromote(cmdid, playerid, params[])
     new pid;
 	if (sscanf(params, "u", pid)) SendClientMessage(playerid,COLOR_FAILURE,"Usage: /staffpromote [player id]");
 	{
+		if(pid == INVALID_PLAYER_ID)
+		{
+			SendClientMessage(playerid, COLOR_FAILURE, "Player not found.");
+			return CMD_SUCCESS;
+		}
 		new Query[128], string[128], pname[MAX_PLAYER_NAME], tname[MAX_PLAYER_NAME];
 		gPData[pid][privilege] += 1;
 		format(Query, sizeof Query, "UPDATE playerdata SET privilege=%d WHERE id = %d", gPData[playerid][privilege], gPData[playerid][id]);
