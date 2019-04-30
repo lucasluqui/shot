@@ -422,12 +422,21 @@ public OnPlayerText(playerid, text[])
 
 public OnPlayerGiveDamage(playerid, damagedid, Float:amount, weaponid, bodypart)
 {
-	if (bodypart == 9){
-		new Float:hp;
-		GetPlayerHealth(damagedid, hp);
-		SetPlayerHealth(damagedid, hp-95);
+	
+	if(gPData[damagedid][adminEnabled])
+	{
+		return 0;
 	}
-    return 1;
+	else
+	{
+		if (bodypart == 9)
+		{
+			new Float:hp;
+			GetPlayerHealth(damagedid, hp);
+			SetPlayerHealth(damagedid, hp-95);
+		}
+		return 1;
+	}
 }
 
 public OnPlayerCommandReceived(cmdid, playerid, cmdtext[])
@@ -481,7 +490,7 @@ COMMAND:staff(cmdid, playerid, params[])
 		{
 			new pname[MAX_PLAYER_NAME];
         	GetPlayerName(i, pname, sizeof(pname));
-			format(string, sizeof(string), "{%s}** %s %s (ID: %d)", getPrivilegeColor(playerid), getPrivilegeName(playerid), pname, i);
+			format(string, sizeof(string), "{%s}** %s %s (ID: %d)", getPrivilegeColor(i), getPrivilegeName(i), pname, i);
 			SendClientMessage(playerid,COLOR_DEFAULT,string);
             found++;
         }
@@ -540,9 +549,12 @@ COMMAND:w(cmdid, playerid, params[])
 		if(isStaff(pid) || isStaff(playerid))
 		{
 			new string[128], pname[MAX_PLAYER_NAME];
-			GetPlayerName(pid, pname, sizeof(pname));
+			GetPlayerName(playerid, pname, sizeof(pname));
 			format(string, sizeof string, "Administration: %s (ID: %d) whispers: %s", pname, playerid, msg);
 			SendClientMessage(pid, COLOR_DEFAULT, string);
+			GetPlayerName(pid, pname, sizeof(pname));
+			format(string, sizeof string, "Administration: you whispered %s (ID: %d): %s", pname, pid, msg);
+			SendClientMessage(playerid, COLOR_DEFAULT, string);
 		}
 		else
 		{
@@ -590,7 +602,7 @@ COMMAND<PRIVILEGE_ADMINISTRATOR>:setprivilege(cmdid, playerid, params[])
 		}
 		new Query[128], string[128], pname[MAX_PLAYER_NAME], tname[MAX_PLAYER_NAME];
 		gPData[pid][privilege] = priv;
-		format(Query, sizeof Query, "UPDATE playerdata SET privilege=%d WHERE id = %d", gPData[playerid][privilege], gPData[playerid][id]);
+		format(Query, sizeof Query, "UPDATE playerdata SET privilege=%d WHERE id = %d", gPData[pid][privilege], gPData[pid][id]);
 		db_query(Database, Query);
 		GetPlayerName(pid, pname, sizeof(pname));
 		GetPlayerName(playerid, tname, sizeof(tname));
@@ -614,13 +626,37 @@ COMMAND<PRIVILEGE_ADMINISTRATOR>:staffpromote(cmdid, playerid, params[])
 		}
 		new Query[128], string[128], pname[MAX_PLAYER_NAME], tname[MAX_PLAYER_NAME];
 		gPData[pid][privilege] += 1;
-		format(Query, sizeof Query, "UPDATE playerdata SET privilege=%d WHERE id = %d", gPData[playerid][privilege], gPData[playerid][id]);
+		format(Query, sizeof Query, "UPDATE playerdata SET privilege=%d WHERE id = %d", gPData[pid][privilege], gPData[pid][id]);
 		db_query(Database, Query);
 		GetPlayerName(pid, pname, sizeof(pname));
 		GetPlayerName(playerid, tname, sizeof(tname));
 		format(string, sizeof string, "Administration: %s has promoted you to %s.", tname, getPrivilegeName(pid));
 		SendClientMessage(pid, COLOR_DEFAULT, string);
 		format(string, sizeof string, "Administration: You have promoted %s to %s.", pname, getPrivilegeName(pid));
+		SendClientMessage(playerid, COLOR_DEFAULT, string);
+	}
+    return CMD_SUCCESS;
+}
+
+COMMAND<PRIVILEGE_ADMINISTRATOR>:staffadd(cmdid, playerid, params[])
+{
+    new pid;
+	if (sscanf(params, "u", pid)) SendClientMessage(playerid,COLOR_FAILURE,"Usage: /staffadd [player id]");
+	{
+		if(pid == INVALID_PLAYER_ID)
+		{
+			SendClientMessage(playerid, COLOR_FAILURE, "Player not found.");
+			return CMD_SUCCESS;
+		}
+		new Query[128], string[128], pname[MAX_PLAYER_NAME], tname[MAX_PLAYER_NAME];
+		gPData[pid][privilege] = 4;
+		format(Query, sizeof Query, "UPDATE playerdata SET privilege=%d WHERE id = %d", gPData[pid][privilege], gPData[pid][id]);
+		db_query(Database, Query);
+		GetPlayerName(pid, pname, sizeof(pname));
+		GetPlayerName(playerid, tname, sizeof(tname));
+		format(string, sizeof string, "Administration: %s has added you to the Staff team, welcome! (/help admin)", tname);
+		SendClientMessage(pid, COLOR_DEFAULT, string);
+		format(string, sizeof string, "Administration: You have added %s to the Staff team.", pname);
 		SendClientMessage(playerid, COLOR_DEFAULT, string);
 	}
     return CMD_SUCCESS;
