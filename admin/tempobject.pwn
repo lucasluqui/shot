@@ -1,6 +1,7 @@
 #include <a_samp>
 #include <smartcmd>
 #include <sscanf2>
+#include "core/enums/privileges.pwn"
 
 #define COLOR_DEFAULT			0xAAAAAAFF
 #define COLOR_FAILURE           0xD62B20FF
