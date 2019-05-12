@@ -2,15 +2,15 @@
 #include <core>
 #include <float>
 
-// useful command libraries
+// command libraries
 #include <smartcmd>
 #include <sscanf2>
 
-// admin commands
+// basic privileged commands
 #include "admin/standalones.pwn"
 #include "admin/tempobject.pwn"
 
-// player commands
+// basic player commands
 #include "player/standalones.pwn"
 
 #pragma tabsize 0
@@ -35,8 +35,7 @@
 #include "core/enums/privileges.pwn"
 #include "core/enums/memberships.pwn"
 
-new 
-    DB: Database;
+new DB: Database;
 new gPData[MAX_PLAYERS][playerdata];
 new Text:websiteUrlTextDraw, PlayerText:playerLevelTextDraw[MAX_PLAYERS];
 
@@ -77,8 +76,7 @@ public increaseLevel(playerid)
 
 public pullData(playerid)
 {
-	new 
-	DBResult: Result, buf[129];
+	new DBResult: Result, buf[129];
 
 	format(buf, sizeof buf, "SELECT * FROM playerdata WHERE name = '%q' LIMIT 1", gPData[playerid][name]);
 	Result = db_query(Database, buf);
@@ -251,9 +249,7 @@ public OnPlayerConnect(playerid)
 	gPData[playerid][statsSet] = 0;
 	TogglePlayerSpectating(playerid,true);
 
-    new 
-        Query[82],
-        DBResult: Result;
+    new Query[82], DBResult: Result;
 
 	GetPlayerName(playerid, gPData[playerid][name], MAX_PLAYER_NAME);
 	format(Query, sizeof Query, "SELECT password FROM playerdata WHERE name = '%q' LIMIT 1", gPData[playerid][name]);
@@ -277,11 +273,9 @@ public OnPlayerDisconnect(playerid, reason)
 {
 	submitData(playerid);
 	
-	new  
-        tmp[playerdata]; 
-
+	new tmp[playerdata]; 
     gPData[playerid] = tmp;
-    return 1; 
+    return 1;
 }  
 
 public OnPlayerSpawn(playerid)
@@ -359,15 +353,13 @@ public OnDialogResponse(playerid, dialogid, response, listitem, inputtext[])
 				return 1;
 			}
 
-            new
-                Query[208]; 
+            new Query[208]; 
 
 			WP_Hash(gPData[playerid][password], 129, inputtext);
 			format(Query, sizeof Query, "INSERT INTO playerdata (name, password) VALUES ('%q', '%s')", gPData[playerid][name], gPData[playerid][password]);
 			db_query(Database, Query);
 
-            new 
-                DBResult: Result;
+            new DBResult: Result;
 
             Result = db_query(Database, "SELECT last_insert_rowid()"); 
             gPData[playerid][id] = db_get_field_int(Result);
@@ -382,8 +374,7 @@ public OnDialogResponse(playerid, dialogid, response, listitem, inputtext[])
 		{
 			if(!response) return Kick(playerid);
             
-			new 
-                buf[129];
+			new buf[129];
             
 			WP_Hash(buf, 129, inputtext);
             if (strcmp(buf, gPData[playerid][password]))
@@ -439,6 +430,18 @@ public OnPlayerGiveDamage(playerid, damagedid, Float:amount, weaponid, bodypart)
 	}
 }
 
+// ~-------------~
+// C O M M A N D S
+// ~-------------~
+
+
+
+// ~--------------~
+// Command handlers
+// ~--------------~
+
+
+
 public OnPlayerCommandReceived(cmdid, playerid, cmdtext[])
 {
 	new playerState = GetPlayerState(playerid);
@@ -469,11 +472,17 @@ public OnPlayerCommandPerformed(cmdid, playerid, cmdtext[], success) {
 
 
 
+// ~-----------------~
+// Privileged commands
+// ~-----------------~
 
 
 
-
-
+/*
+	Command: /staff
+	Description: Displays current online staff members.
+	Notes: N/A.
+*/
 COMMAND:staff(cmdid, playerid, params[])
 {
     if(!isnull(params)) {
@@ -501,15 +510,157 @@ COMMAND:staff(cmdid, playerid, params[])
     return CMD_SUCCESS;
 }
 
-COMMAND:stats(cmdid, playerid, params[])
+
+
+/*
+	Command: /a [message]
+	Description: Sends a message to administration private chat.
+	Notes: N/A.
+*/
+COMMAND<PRIVILEGE_LOWMODERATOR>:a(cmdid, playerid, params[])
 {
-	new string[128];
-	SendClientMessage(playerid,COLOR_DEFAULT,"* Your stats:");
-	format(string, sizeof(string), "ID DB: %d | Rank: %s | Membership: %s | Level: %d | Experience: %d/%d | Balance: %d | Skin ID: %d", gPData[playerid][id], getPrivilegeName(playerid), getMembershipName(playerid), gPData[playerid][level], gPData[playerid][xp], calcRequiredXP(gPData[playerid][level]), gPData[playerid][balance], gPData[playerid][skinid]);
-	SendClientMessage(playerid,COLOR_DEFAULT,string);
+    sendToAdminChat(playerid, params);
     return CMD_SUCCESS;
 }
 
+
+
+/*
+	Command: /adminmode
+	Description: Enables admin mode on command invoker,
+	granting godmode along other moderation benefits.
+	Notes: N/A.
+*/
+COMMAND<PRIVILEGE_LOWMODERATOR>:adminmode(cmdid, playerid, params[])
+{
+    if(gPData[playerid][adminEnabled])
+	{
+		SetPlayerHealth(playerid, 100);
+		SendClientMessage(playerid,COLOR_DEFAULT,"Admin mode toggled OFF.");
+		SetPlayerColor(playerid, COLOR_DEFAULT);
+		gPData[playerid][adminEnabled] = 0;
+	}
+	else
+	{
+		SetPlayerHealth(playerid, Float:0x7F800000);
+		SendClientMessage(playerid,COLOR_DEFAULT,"Admin mode toggled ON.");
+		SetPlayerColor(playerid, COLOR_FAILURE);
+		gPData[playerid][adminEnabled] = 1;
+	}
+    return CMD_SUCCESS;
+}
+
+/* Shortcuts for /adminmode */
+ALT:am = CMD:adminmode;
+
+
+
+/*
+	Command: /setprivilege [player id] [value]
+	Description: Sets a player's privilege to a specific value.
+	Notes: N/A.
+*/
+COMMAND<PRIVILEGE_ADMINISTRATOR>:setprivilege(cmdid, playerid, params[])
+{
+    new pid, priv;
+	if (sscanf(params, "ud", pid, priv)) SendClientMessage(playerid,COLOR_FAILURE,"Usage: /setprivilege [player id] [privilege]");
+	{
+		if(pid == INVALID_PLAYER_ID)
+		{
+			SendClientMessage(playerid, COLOR_FAILURE, "Player not found.");
+			return CMD_SUCCESS;
+		}
+		new Query[128], string[128], pname[MAX_PLAYER_NAME], tname[MAX_PLAYER_NAME];
+		gPData[pid][privilege] = priv;
+		format(Query, sizeof Query, "UPDATE playerdata SET privilege=%d WHERE id = %d", gPData[pid][privilege], gPData[pid][id]);
+		db_query(Database, Query);
+		GetPlayerName(pid, pname, sizeof(pname));
+		GetPlayerName(playerid, tname, sizeof(tname));
+		format(string, sizeof string, "Administration: %s has set your rank to %s.", tname, getPrivilegeName(pid));
+		SendClientMessage(pid, COLOR_DEFAULT, string);
+		format(string, sizeof string, "Administration: You have set %s rank to %s.", pname, getPrivilegeName(pid));
+		SendClientMessage(playerid, COLOR_DEFAULT, string);
+	}
+    return CMD_SUCCESS;
+}
+
+
+
+/*
+	Command: /staffpromote [player id]
+	Description: Increases a player's privilege by 1.
+	Notes: N/A.
+*/
+COMMAND<PRIVILEGE_ADMINISTRATOR>:staffpromote(cmdid, playerid, params[])
+{
+    new pid;
+	if (sscanf(params, "u", pid)) SendClientMessage(playerid,COLOR_FAILURE,"Usage: /staffpromote [player id]");
+	{
+		if(pid == INVALID_PLAYER_ID)
+		{
+			SendClientMessage(playerid, COLOR_FAILURE, "Player not found.");
+			return CMD_SUCCESS;
+		}
+		new Query[128], string[128], pname[MAX_PLAYER_NAME], tname[MAX_PLAYER_NAME];
+		gPData[pid][privilege] += 1;
+		format(Query, sizeof Query, "UPDATE playerdata SET privilege=%d WHERE id = %d", gPData[pid][privilege], gPData[pid][id]);
+		db_query(Database, Query);
+		GetPlayerName(pid, pname, sizeof(pname));
+		GetPlayerName(playerid, tname, sizeof(tname));
+		format(string, sizeof string, "Administration: %s has promoted you to %s.", tname, getPrivilegeName(pid));
+		SendClientMessage(pid, COLOR_DEFAULT, string);
+		format(string, sizeof string, "Administration: You have promoted %s to %s.", pname, getPrivilegeName(pid));
+		SendClientMessage(playerid, COLOR_DEFAULT, string);
+	}
+    return CMD_SUCCESS;
+}
+
+
+
+/*
+	Command: /staffadd [player id]
+	Description: Uppers a player's privilege up to minimum required to appear as staff.
+	Notes: N/A.
+*/
+COMMAND<PRIVILEGE_ADMINISTRATOR>:staffadd(cmdid, playerid, params[])
+{
+    new pid;
+	if (sscanf(params, "u", pid)) SendClientMessage(playerid,COLOR_FAILURE,"Usage: /staffadd [player id]");
+	{
+		if(pid == INVALID_PLAYER_ID)
+		{
+			SendClientMessage(playerid, COLOR_FAILURE, "Player not found.");
+			return CMD_SUCCESS;
+		}
+		new Query[128], string[128], pname[MAX_PLAYER_NAME], tname[MAX_PLAYER_NAME];
+		gPData[pid][privilege] = 4;
+		format(Query, sizeof Query, "UPDATE playerdata SET privilege=%d WHERE id = %d", gPData[pid][privilege], gPData[pid][id]);
+		db_query(Database, Query);
+		GetPlayerName(pid, pname, sizeof(pname));
+		GetPlayerName(playerid, tname, sizeof(tname));
+		format(string, sizeof string, "Administration: %s has added you to the Staff team, welcome! (/help admin)", tname);
+		SendClientMessage(pid, COLOR_DEFAULT, string);
+		format(string, sizeof string, "Administration: You have added %s to the Staff team.", pname);
+		SendClientMessage(playerid, COLOR_DEFAULT, string);
+	}
+    return CMD_SUCCESS;
+}
+
+
+
+// ~-------------~
+// Player commands
+// ~-------------~
+
+
+
+
+/*
+	Command: /id [input]
+	Description: Searches for any matching online players based
+	on command input.
+	Notes: N/A.
+*/
 COMMAND:id(cmdid, playerid, params[])
 {
     if(isnull(params))
@@ -536,6 +687,14 @@ COMMAND:id(cmdid, playerid, params[])
     return CMD_SUCCESS;
 }
 
+
+
+/*
+	Command: /w [player/staff id] [message]
+	Description: Privately whispers some message to a certain player.
+	Regular users can only whisper staff members with this command.
+	Notes: N/A.
+*/
 COMMAND:w(cmdid, playerid, params[])
 {
     new pid, msg[128];
@@ -564,100 +723,18 @@ COMMAND:w(cmdid, playerid, params[])
     return CMD_SUCCESS;
 }
 
-COMMAND<PRIVILEGE_LOWMODERATOR>:a(cmdid, playerid, params[])
-{
-    sendToAdminChat(playerid, params);
-    return CMD_SUCCESS;
-}
 
-COMMAND<PRIVILEGE_LOWMODERATOR>:adminmode(cmdid, playerid, params[])
-{
-    if(gPData[playerid][adminEnabled])
-	{
-		SetPlayerHealth(playerid, 100);
-		SendClientMessage(playerid,COLOR_DEFAULT,"Admin mode toggled OFF.");
-		SetPlayerColor(playerid, COLOR_DEFAULT);
-		gPData[playerid][adminEnabled] = 0;
-	}
-	else
-	{
-		SetPlayerHealth(playerid, Float:0x7F800000);
-		SendClientMessage(playerid,COLOR_DEFAULT,"Admin mode toggled ON.");
-		SetPlayerColor(playerid, COLOR_FAILURE);
-		gPData[playerid][adminEnabled] = 1;
-	}
-    return CMD_SUCCESS;
-}
-ALT:am = CMD:adminmode;
 
-COMMAND<PRIVILEGE_ADMINISTRATOR>:setprivilege(cmdid, playerid, params[])
+/*
+	Command: /stats
+	Description: Displays your account stats.
+	Notes: N/A.
+*/
+COMMAND:stats(cmdid, playerid, params[])
 {
-    new pid, priv;
-	if (sscanf(params, "ud", pid, priv)) SendClientMessage(playerid,COLOR_FAILURE,"Usage: /setprivilege [player id] [privilege]");
-	{
-		if(pid == INVALID_PLAYER_ID)
-		{
-			SendClientMessage(playerid, COLOR_FAILURE, "Player not found.");
-			return CMD_SUCCESS;
-		}
-		new Query[128], string[128], pname[MAX_PLAYER_NAME], tname[MAX_PLAYER_NAME];
-		gPData[pid][privilege] = priv;
-		format(Query, sizeof Query, "UPDATE playerdata SET privilege=%d WHERE id = %d", gPData[pid][privilege], gPData[pid][id]);
-		db_query(Database, Query);
-		GetPlayerName(pid, pname, sizeof(pname));
-		GetPlayerName(playerid, tname, sizeof(tname));
-		format(string, sizeof string, "Administration: %s has set your rank to %s.", tname, getPrivilegeName(pid));
-		SendClientMessage(pid, COLOR_DEFAULT, string);
-		format(string, sizeof string, "Administration: You have set %s rank to %s.", pname, getPrivilegeName(pid));
-		SendClientMessage(playerid, COLOR_DEFAULT, string);
-	}
-    return CMD_SUCCESS;
-}
-
-COMMAND<PRIVILEGE_ADMINISTRATOR>:staffpromote(cmdid, playerid, params[])
-{
-    new pid;
-	if (sscanf(params, "u", pid)) SendClientMessage(playerid,COLOR_FAILURE,"Usage: /staffpromote [player id]");
-	{
-		if(pid == INVALID_PLAYER_ID)
-		{
-			SendClientMessage(playerid, COLOR_FAILURE, "Player not found.");
-			return CMD_SUCCESS;
-		}
-		new Query[128], string[128], pname[MAX_PLAYER_NAME], tname[MAX_PLAYER_NAME];
-		gPData[pid][privilege] += 1;
-		format(Query, sizeof Query, "UPDATE playerdata SET privilege=%d WHERE id = %d", gPData[pid][privilege], gPData[pid][id]);
-		db_query(Database, Query);
-		GetPlayerName(pid, pname, sizeof(pname));
-		GetPlayerName(playerid, tname, sizeof(tname));
-		format(string, sizeof string, "Administration: %s has promoted you to %s.", tname, getPrivilegeName(pid));
-		SendClientMessage(pid, COLOR_DEFAULT, string);
-		format(string, sizeof string, "Administration: You have promoted %s to %s.", pname, getPrivilegeName(pid));
-		SendClientMessage(playerid, COLOR_DEFAULT, string);
-	}
-    return CMD_SUCCESS;
-}
-
-COMMAND<PRIVILEGE_ADMINISTRATOR>:staffadd(cmdid, playerid, params[])
-{
-    new pid;
-	if (sscanf(params, "u", pid)) SendClientMessage(playerid,COLOR_FAILURE,"Usage: /staffadd [player id]");
-	{
-		if(pid == INVALID_PLAYER_ID)
-		{
-			SendClientMessage(playerid, COLOR_FAILURE, "Player not found.");
-			return CMD_SUCCESS;
-		}
-		new Query[128], string[128], pname[MAX_PLAYER_NAME], tname[MAX_PLAYER_NAME];
-		gPData[pid][privilege] = 4;
-		format(Query, sizeof Query, "UPDATE playerdata SET privilege=%d WHERE id = %d", gPData[pid][privilege], gPData[pid][id]);
-		db_query(Database, Query);
-		GetPlayerName(pid, pname, sizeof(pname));
-		GetPlayerName(playerid, tname, sizeof(tname));
-		format(string, sizeof string, "Administration: %s has added you to the Staff team, welcome! (/help admin)", tname);
-		SendClientMessage(pid, COLOR_DEFAULT, string);
-		format(string, sizeof string, "Administration: You have added %s to the Staff team.", pname);
-		SendClientMessage(playerid, COLOR_DEFAULT, string);
-	}
+	new string[128];
+	SendClientMessage(playerid,COLOR_DEFAULT,"* Your stats:");
+	format(string, sizeof(string), "ID DB: %d | Rank: %s | Membership: %s | Level: %d | Experience: %d/%d | Balance: %d | Skin ID: %d", gPData[playerid][id], getPrivilegeName(playerid), getMembershipName(playerid), gPData[playerid][level], gPData[playerid][xp], calcRequiredXP(gPData[playerid][level]), gPData[playerid][balance], gPData[playerid][skinid]);
+	SendClientMessage(playerid,COLOR_DEFAULT,string);
     return CMD_SUCCESS;
 }
