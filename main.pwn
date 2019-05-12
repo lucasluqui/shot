@@ -41,23 +41,23 @@ new Text:websiteUrlTextDraw, PlayerText:playerLevelTextDraw[MAX_PLAYERS];
 
 stock getPname(playerid)  
 {  
-    new pname[24];  
-    GetPlayerName(playerid, pname, sizeof(pname));  
-    return pname;  
+	new pname[24];  
+	GetPlayerName(playerid, pname, sizeof(pname));  
+	return pname;  
 }
 
 stock calcRequiredXP(lvl)  
 {  
-    new value = 25*lvl*(1+lvl);
-    return value;  
+	new value = 25*lvl*(1+lvl);
+	return value;  
 }
 
 public increaseLevel(playerid)  
 {  
-    new string[128];
+	new string[128];
 	gPData[playerid][level] += 1;
 
-    PlayerTextDrawDestroy(playerid, playerLevelTextDraw[playerid]);
+	PlayerTextDrawDestroy(playerid, playerLevelTextDraw[playerid]);
 	format(string, sizeof(string), "Level %d", gPData[playerid][level])
 	playerLevelTextDraw[playerid] = CreatePlayerTextDraw(playerid, 553.000000, 101.000000, string);
 	PlayerTextDrawAlignment(playerid, playerLevelTextDraw[playerid], 2);
@@ -113,13 +113,13 @@ public sendToAdminChat(playerid, msg[])
 	new pname[MAX_PLAYER_NAME], string[128];
 	GetPlayerName(playerid, pname, sizeof(pname));
 	for(new i; i < MAX_PLAYERS; i++)
-    {
-        if(isStaff(i))
+	{
+		if(isStaff(i))
 		{
 			format(string, sizeof string, "Administration: %s: %s", pname, msg);
 			SendClientMessage(i,COLOR_ADMINCHAT,string);
-        }
-    }
+		}
+	}
 }
 
 public isStaff(playerid)
@@ -219,54 +219,53 @@ public OnGameModeInit()
 	TextDrawSetProportional(websiteUrlTextDraw,1);
 	TextDrawSetShadow(websiteUrlTextDraw,1);
 
-    if ((Database = db_open("players.db")) == DB: 0)
-    {
-        print("Failed to open a connection to playerdata database."); 
-    } 
-    else
-    { 
-        db_query(Database, "PRAGMA synchronous = OFF");
+	if ((Database = db_open("players.db")) == DB: 0)
+	{
+		print("Failed to open a connection to playerdata database."); 
+	} 
+	else
+	{ 
+		db_query(Database, "PRAGMA synchronous = OFF");
 		new createTable[600] = "CREATE TABLE IF NOT EXISTS playerdata (id INTEGER PRIMARY KEY AUTOINCREMENT, name VARCHAR(24) COLLATE NOCASE, password VARCHAR(129), privilege INTEGER DEFAULT 0 NOT NULL, membership INTEGER DEFAULT 0 NOT NULL, level INTEGER DEFAULT 1 NOT NULL, xp INTEGER DEFAULT 0 NOT NULL,";
 		strcat(createTable, " balance INTEGER DEFAULT 2500 NOT NULL, skinid INTEGER DEFAULT 73 NOT NULL, pposx REAL DEFAULT 0.0 NOT NULL, pposy REAL DEFAULT 0.0 NOT NULL, pposz REAL DEFAULT 0.0 NOT NULL, pposa REAL DEFAULT 0.0 NOT NULL)");
-        db_query(Database, createTable);
-    } 
-    return 1; 
+		db_query(Database, createTable);
+	} 
+	return 1; 
 }
 
 public OnGameModeExit() 
 { 
-    db_close(Database);
-    return 1; 
+	db_close(Database);
+	return 1; 
 }  
 
 public OnPlayerConnect(playerid)
 {
-    new  
-        tmp[playerdata]; 
+	new tmp[playerdata]; 
 
-    gPData[playerid] = tmp; 
+	gPData[playerid] = tmp; 
 	gPData[playerid][loggedin] = 0;
 	gPData[playerid][statsSet] = 0;
 	TogglePlayerSpectating(playerid,true);
 
-    new Query[82], DBResult: Result;
+	new Query[82], DBResult: Result;
 
 	GetPlayerName(playerid, gPData[playerid][name], MAX_PLAYER_NAME);
 	format(Query, sizeof Query, "SELECT password FROM playerdata WHERE name = '%q' LIMIT 1", gPData[playerid][name]);
 	Result = db_query(Database, Query);
 
-    if (db_num_rows(Result))
-    { 
-        db_get_field_assoc(Result, "password", gPData[playerid][password], 129);
-        ShowPlayerDialog(playerid, DIALOG_LOGIN, DIALOG_STYLE_PASSWORD, "Login", "It seems you're already registered, please type in your password:", "Login", "Exit");
-    } 
-    else
-    {  
-        ShowPlayerDialog(playerid, DIALOG_REGISTER, DIALOG_STYLE_PASSWORD, "Register", "It appears to be your first time around, welcome! Please type in a password for your account below.", "Register", "Exit"); 
-    } 
-    db_free_result(Result);
+	if (db_num_rows(Result))
+	{ 
+		db_get_field_assoc(Result, "password", gPData[playerid][password], 129);
+		ShowPlayerDialog(playerid, DIALOG_LOGIN, DIALOG_STYLE_PASSWORD, "Login", "It seems you're already registered, please type in your password:", "Login", "Exit");
+	} 
+	else
+	{  
+		ShowPlayerDialog(playerid, DIALOG_REGISTER, DIALOG_STYLE_PASSWORD, "Register", "It appears to be your first time around, welcome! Please type in a password for your account below.", "Register", "Exit"); 
+	} 
+	db_free_result(Result);
 	TextDrawShowForPlayer(playerid, websiteUrlTextDraw);
-    return 1;
+	return 1;
 }
 
 public OnPlayerDisconnect(playerid, reason) 
@@ -274,8 +273,8 @@ public OnPlayerDisconnect(playerid, reason)
 	submitData(playerid);
 	
 	new tmp[playerdata]; 
-    gPData[playerid] = tmp;
-    return 1;
+	gPData[playerid] = tmp;
+	return 1;
 }  
 
 public OnPlayerSpawn(playerid)
@@ -343,7 +342,7 @@ public OnPlayerDeath(playerid, killerid, reason)
 
 public OnDialogResponse(playerid, dialogid, response, listitem, inputtext[])
 {
-    switch(dialogid){
+	switch(dialogid){
 		case DIALOG_REGISTER:
 		{
 			if(!response) return Kick(playerid);
@@ -353,18 +352,18 @@ public OnDialogResponse(playerid, dialogid, response, listitem, inputtext[])
 				return 1;
 			}
 
-            new Query[208]; 
+			new Query[208]; 
 
 			WP_Hash(gPData[playerid][password], 129, inputtext);
 			format(Query, sizeof Query, "INSERT INTO playerdata (name, password) VALUES ('%q', '%s')", gPData[playerid][name], gPData[playerid][password]);
 			db_query(Database, Query);
 
-            new DBResult: Result;
+			new DBResult: Result;
 
-            Result = db_query(Database, "SELECT last_insert_rowid()"); 
-            gPData[playerid][id] = db_get_field_int(Result);
+			Result = db_query(Database, "SELECT last_insert_rowid()"); 
+			gPData[playerid][id] = db_get_field_int(Result);
 
-            db_free_result(Result);
+			db_free_result(Result);
 
 			pullData(playerid);
 			gPData[playerid][loggedin] = 1;
@@ -373,11 +372,11 @@ public OnDialogResponse(playerid, dialogid, response, listitem, inputtext[])
 		case DIALOG_LOGIN:
 		{
 			if(!response) return Kick(playerid);
-            
+			
 			new buf[129];
-            
+			
 			WP_Hash(buf, 129, inputtext);
-            if (strcmp(buf, gPData[playerid][password]))
+			if (strcmp(buf, gPData[playerid][password]))
 			{
 				ShowPlayerDialog(playerid, DIALOG_LOGIN, DIALOG_STYLE_PASSWORD, "Login", "It seems you're already registered, please type in your password:\n{D62B20}Password did not match, try again.", "Login", "Exit");
 				return 1;
@@ -388,7 +387,7 @@ public OnDialogResponse(playerid, dialogid, response, listitem, inputtext[])
 		}
 		default: return 0;
 	}
-    return 1;
+	return 1;
 }
 
 public OnPlayerUpdate(playerid)
@@ -398,8 +397,8 @@ public OnPlayerUpdate(playerid)
 	
 	// minecraft good, minigun bad
 	if(GetPlayerWeapon(playerid) == WEAPON_MINIGUN && gPData[playerid][privilege] < PRIVILEGE_ADMINISTRATOR) {
-	    Kick(playerid);
-	    return 0;
+		Kick(playerid);
+		return 0;
 	}
 
 	return 1;
@@ -407,8 +406,8 @@ public OnPlayerUpdate(playerid)
 
 public OnPlayerText(playerid, text[])
 {
-    SetPlayerChatBubble(playerid, text, 0xFFFFFFFF, 40.0, 10000);
-    return 1;
+	SetPlayerChatBubble(playerid, text, 0xFFFFFFFF, 40.0, 10000);
+	return 1;
 }
 
 public OnPlayerGiveDamage(playerid, damagedid, Float:amount, weaponid, bodypart)
@@ -445,10 +444,10 @@ public OnPlayerGiveDamage(playerid, damagedid, Float:amount, weaponid, bodypart)
 public OnPlayerCommandReceived(cmdid, playerid, cmdtext[])
 {
 	new playerState = GetPlayerState(playerid);
-    if (playerState != PLAYER_STATE_SPECTATING && playerState != PLAYER_STATE_WASTED)
-    {
-        if(GetCommandFlags(cmdid) <= gPData[playerid][privilege] || GetCommandFlags(cmdid) <= gPData[playerid][membership])
-        {
+	if (playerState != PLAYER_STATE_SPECTATING && playerState != PLAYER_STATE_WASTED)
+	{
+		if(GetCommandFlags(cmdid) <= gPData[playerid][privilege] || GetCommandFlags(cmdid) <= gPData[playerid][membership])
+		{
 			return 1;
 		}
 		else
@@ -456,18 +455,19 @@ public OnPlayerCommandReceived(cmdid, playerid, cmdtext[])
 			SendClientMessage(playerid,COLOR_FAILURE,"You do not met the requirements to execute this command.");
 			return 0;
 		}
-    }
-    SendClientMessage(playerid,COLOR_FAILURE,"You can not input commands right now.");
-    return 0;
+	}
+	SendClientMessage(playerid,COLOR_FAILURE,"You can not input commands right now.");
+	return 0;
 }
 
 public OnPlayerCommandPerformed(cmdid, playerid, cmdtext[], success) {
-    if (!success) {
-        new string[128];
-        format(string, sizeof(string), "Command %s not found.", cmdtext);
-        SendClientMessage(playerid,COLOR_FAILURE,string);
-    }
-    return 1;
+	if (!success)
+	{
+		new string[128];
+		format(string, sizeof(string), "Command %s not found.", cmdtext);
+		SendClientMessage(playerid,COLOR_FAILURE,string);
+	}
+	return 1;
 }
 
 
@@ -485,29 +485,31 @@ public OnPlayerCommandPerformed(cmdid, playerid, cmdtext[], success) {
 */
 COMMAND:staff(cmdid, playerid, params[])
 {
-    if(!isnull(params)) {
-        return SendClientMessage(playerid,COLOR_FAILURE,"No parameters required.");
-    }
+	if(!isnull(params))
+	{
+		return SendClientMessage(playerid,COLOR_FAILURE,"No parameters required.");
+	}
 
-    new string[128], found;
+	new string[128], found;
 	format(string, sizeof(string), "* Online Staff:");
 	SendClientMessage(playerid,COLOR_DEFAULT,string);
 
-    for(new i; i < MAX_PLAYERS; i++)
-    {
-        if(gPData[i][privilege] >= PRIVILEGE_LOWMODERATOR)
+	for(new i; i < MAX_PLAYERS; i++)
+	{
+		if(gPData[i][privilege] >= PRIVILEGE_LOWMODERATOR)
 		{
 			new pname[MAX_PLAYER_NAME];
-        	GetPlayerName(i, pname, sizeof(pname));
+			GetPlayerName(i, pname, sizeof(pname));
 			format(string, sizeof(string), "{%s}** %s %s (ID: %d)", getPrivilegeColor(i), getPrivilegeName(i), pname, i);
 			SendClientMessage(playerid,COLOR_DEFAULT,string);
-            found++;
-        }
-    }
-    if(found == 0){
-        SendClientMessage(playerid,COLOR_DEFAULT,"There are no staff members online.");
-    }
-    return CMD_SUCCESS;
+			found++;
+		}
+	}
+	if(found == 0)
+	{
+		SendClientMessage(playerid,COLOR_DEFAULT,"There are no staff members online.");
+	}
+	return CMD_SUCCESS;
 }
 
 
@@ -519,8 +521,8 @@ COMMAND:staff(cmdid, playerid, params[])
 */
 COMMAND<PRIVILEGE_LOWMODERATOR>:a(cmdid, playerid, params[])
 {
-    sendToAdminChat(playerid, params);
-    return CMD_SUCCESS;
+	sendToAdminChat(playerid, params);
+	return CMD_SUCCESS;
 }
 
 
@@ -533,7 +535,7 @@ COMMAND<PRIVILEGE_LOWMODERATOR>:a(cmdid, playerid, params[])
 */
 COMMAND<PRIVILEGE_LOWMODERATOR>:adminmode(cmdid, playerid, params[])
 {
-    if(gPData[playerid][adminEnabled])
+	if(gPData[playerid][adminEnabled])
 	{
 		SetPlayerHealth(playerid, 100);
 		SendClientMessage(playerid,COLOR_DEFAULT,"Admin mode toggled OFF.");
@@ -547,7 +549,7 @@ COMMAND<PRIVILEGE_LOWMODERATOR>:adminmode(cmdid, playerid, params[])
 		SetPlayerColor(playerid, COLOR_FAILURE);
 		gPData[playerid][adminEnabled] = 1;
 	}
-    return CMD_SUCCESS;
+	return CMD_SUCCESS;
 }
 
 /* Shortcuts for /adminmode */
@@ -562,7 +564,7 @@ ALT:am = CMD:adminmode;
 */
 COMMAND<PRIVILEGE_ADMINISTRATOR>:setprivilege(cmdid, playerid, params[])
 {
-    new pid, priv;
+	new pid, priv;
 	if (sscanf(params, "ud", pid, priv)) SendClientMessage(playerid,COLOR_FAILURE,"Usage: /setprivilege [player id] [privilege]");
 	{
 		if(pid == INVALID_PLAYER_ID)
@@ -581,7 +583,7 @@ COMMAND<PRIVILEGE_ADMINISTRATOR>:setprivilege(cmdid, playerid, params[])
 		format(string, sizeof string, "Administration: You have set %s rank to %s.", pname, getPrivilegeName(pid));
 		SendClientMessage(playerid, COLOR_DEFAULT, string);
 	}
-    return CMD_SUCCESS;
+	return CMD_SUCCESS;
 }
 
 
@@ -593,7 +595,7 @@ COMMAND<PRIVILEGE_ADMINISTRATOR>:setprivilege(cmdid, playerid, params[])
 */
 COMMAND<PRIVILEGE_ADMINISTRATOR>:staffpromote(cmdid, playerid, params[])
 {
-    new pid;
+	new pid;
 	if (sscanf(params, "u", pid)) SendClientMessage(playerid,COLOR_FAILURE,"Usage: /staffpromote [player id]");
 	{
 		if(pid == INVALID_PLAYER_ID)
@@ -612,7 +614,7 @@ COMMAND<PRIVILEGE_ADMINISTRATOR>:staffpromote(cmdid, playerid, params[])
 		format(string, sizeof string, "Administration: You have promoted %s to %s.", pname, getPrivilegeName(pid));
 		SendClientMessage(playerid, COLOR_DEFAULT, string);
 	}
-    return CMD_SUCCESS;
+	return CMD_SUCCESS;
 }
 
 
@@ -624,7 +626,7 @@ COMMAND<PRIVILEGE_ADMINISTRATOR>:staffpromote(cmdid, playerid, params[])
 */
 COMMAND<PRIVILEGE_ADMINISTRATOR>:staffadd(cmdid, playerid, params[])
 {
-    new pid;
+	new pid;
 	if (sscanf(params, "u", pid)) SendClientMessage(playerid,COLOR_FAILURE,"Usage: /staffadd [player id]");
 	{
 		if(pid == INVALID_PLAYER_ID)
@@ -643,7 +645,7 @@ COMMAND<PRIVILEGE_ADMINISTRATOR>:staffadd(cmdid, playerid, params[])
 		format(string, sizeof string, "Administration: You have added %s to the Staff team.", pname);
 		SendClientMessage(playerid, COLOR_DEFAULT, string);
 	}
-    return CMD_SUCCESS;
+	return CMD_SUCCESS;
 }
 
 
@@ -663,28 +665,29 @@ COMMAND<PRIVILEGE_ADMINISTRATOR>:staffadd(cmdid, playerid, params[])
 */
 COMMAND:id(cmdid, playerid, params[])
 {
-    if(isnull(params))
+	if(isnull(params))
 	{
-        return SendClientMessage(playerid,COLOR_FAILURE,"Usage: /id [name]");
-    }
+		return SendClientMessage(playerid,COLOR_FAILURE,"Usage: /id [name]");
+	}
 
-    new string[128], found;
+	new string[128], found;
 
-    for(new i; i < MAX_PLAYERS; i++)
-    {
-        new pname[MAX_PLAYER_NAME];
-        GetPlayerName(i, pname, sizeof(pname));
-        if(strfind(pname, params, true) != -1) {
-            format(string, sizeof(string), "%s (ID: %d) (Level: %d)", pname, i, gPData[i][level]);
-            SendClientMessage(playerid,COLOR_DEFAULT,string);
-            found++;
-        }
-    }
-    if(found == 0)
+	for(new i; i < MAX_PLAYERS; i++)
 	{
-        SendClientMessage(playerid,COLOR_DEFAULT,"No players found.");
-    }
-    return CMD_SUCCESS;
+		new pname[MAX_PLAYER_NAME];
+		GetPlayerName(i, pname, sizeof(pname));
+		if(strfind(pname, params, true) != -1)
+		{
+			format(string, sizeof(string), "%s (ID: %d) (Level: %d)", pname, i, gPData[i][level]);
+			SendClientMessage(playerid,COLOR_DEFAULT,string);
+			found++;
+		}
+	}
+	if(found == 0)
+	{
+		SendClientMessage(playerid,COLOR_DEFAULT,"No players found.");
+	}
+	return CMD_SUCCESS;
 }
 
 
@@ -697,7 +700,7 @@ COMMAND:id(cmdid, playerid, params[])
 */
 COMMAND:w(cmdid, playerid, params[])
 {
-    new pid, msg[128];
+	new pid, msg[128];
 	if(sscanf(params, "us", pid, msg)) SendClientMessage(playerid,COLOR_FAILURE,"Usage: /w [staff id] [message]");
 	{
 		if(pid == INVALID_PLAYER_ID)
@@ -720,7 +723,7 @@ COMMAND:w(cmdid, playerid, params[])
 			SendClientMessage(playerid, COLOR_FAILURE, "You can only whisper staff members. (/staff)");
 		}
 	}
-    return CMD_SUCCESS;
+	return CMD_SUCCESS;
 }
 
 
@@ -736,5 +739,5 @@ COMMAND:stats(cmdid, playerid, params[])
 	SendClientMessage(playerid,COLOR_DEFAULT,"* Your stats:");
 	format(string, sizeof(string), "ID DB: %d | Rank: %s | Membership: %s | Level: %d | Experience: %d/%d | Balance: %d | Skin ID: %d", gPData[playerid][id], getPrivilegeName(playerid), getMembershipName(playerid), gPData[playerid][level], gPData[playerid][xp], calcRequiredXP(gPData[playerid][level]), gPData[playerid][balance], gPData[playerid][skinid]);
 	SendClientMessage(playerid,COLOR_DEFAULT,string);
-    return CMD_SUCCESS;
+	return CMD_SUCCESS;
 }
