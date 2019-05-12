@@ -11,22 +11,33 @@
 #include "admin/tempobject.pwn"
 
 // basic player commands
-#include "player/standalones.pwn"
+//#include "player/standalones.pwn"
 
 #pragma tabsize 0
 
+
+
+// player interaction
 #define PLAYER_KILL_MONEY_REWARD	250
 #define PLAYER_KILL_XP_REWARD    	5
 
+// colors
 #define COLOR_DEFAULT				0xAAAAAAFF
 #define COLOR_FAILURE           	0xD62B20FF
 #define COLOR_ADMINCHAT           	0x2A74D6FF
-
 #define COLOR_PRIVILEGE_LOWMODERATOR           	"E0914C"
 #define COLOR_PRIVILEGE_MIDMODERATOR           	"E67E22"
 #define COLOR_PRIVILEGE_HIGHMODERATOR           "C96A16"
 #define COLOR_PRIVILEGE_ADMINISTRATOR           "E74C3C"
 #define COLOR_PRIVILEGE_FOUNDER           		"CC392A"
+
+// strings
+#define SHOOT_TEXTDRAW_URL	"www.~Y~p~W~hoenix~Y~n~W~etwork.net"
+#define SHOOT_COMMANDS_ERR_UNAVAILABLE	"You can not input commands right now."
+#define SHOOT_COMMANDS_ERR_DENIED		"You do not met the requirements to execute this command."
+#define SHOOT_COMMANDS_ERR_NOTFOUND	"Command %s not found."
+#define SHOOT_COMMANDS_ERR_NOPARAMS	"No parameters required."
+#define SHOOT_COMMANDS_ERR_PLAYERNOTFOUND	"Player not found."
 
 
 // enums
@@ -190,7 +201,7 @@ forward isStaff(playerid);
 forward isCash(playerid);
 forward getPrivilegeName(playerid);
 forward getMembershipName(playerid);
-native WP_Hash(buffer[], len, const str[]);
+native WP_Hash(buffer[], len, const str[]); // required to work with WP hashes on register/login.
 
 main()
 {
@@ -209,7 +220,7 @@ public OnGameModeInit()
 	SetWorldTime(11);
 	UsePlayerPedAnims();
 
-	websiteUrlTextDraw = TextDrawCreate(70.000000,432.000000,"www.~Y~p~W~hoenix~Y~n~W~etwork.net");
+	websiteUrlTextDraw = TextDrawCreate(70.000000,432.000000,SHOOT_TEXTDRAW_URL);
 	TextDrawAlignment(websiteUrlTextDraw,2);
 	TextDrawBackgroundColor(websiteUrlTextDraw,0x000000ff);
 	TextDrawFont(websiteUrlTextDraw,2);
@@ -452,11 +463,11 @@ public OnPlayerCommandReceived(cmdid, playerid, cmdtext[])
 		}
 		else
 		{
-			SendClientMessage(playerid,COLOR_FAILURE,"You do not met the requirements to execute this command.");
+			SendClientMessage(playerid, COLOR_FAILURE, SHOOT_COMMANDS_ERR_DENIED);
 			return 0;
 		}
 	}
-	SendClientMessage(playerid,COLOR_FAILURE,"You can not input commands right now.");
+	SendClientMessage(playerid, COLOR_FAILURE, SHOOT_COMMANDS_ERR_UNAVAILABLE);
 	return 0;
 }
 
@@ -464,7 +475,7 @@ public OnPlayerCommandPerformed(cmdid, playerid, cmdtext[], success) {
 	if (!success)
 	{
 		new string[128];
-		format(string, sizeof(string), "Command %s not found.", cmdtext);
+		format(string, sizeof(string), SHOOT_COMMANDS_ERR_NOTFOUND, cmdtext);
 		SendClientMessage(playerid,COLOR_FAILURE,string);
 	}
 	return 1;
@@ -487,7 +498,7 @@ COMMAND:staff(cmdid, playerid, params[])
 {
 	if(!isnull(params))
 	{
-		return SendClientMessage(playerid,COLOR_FAILURE,"No parameters required.");
+		return SendClientMessage(playerid, COLOR_FAILURE, SHOOT_COMMANDS_ERR_NOPARAMS);
 	}
 
 	new string[128], found;
@@ -569,7 +580,7 @@ COMMAND<PRIVILEGE_ADMINISTRATOR>:setprivilege(cmdid, playerid, params[])
 	{
 		if(pid == INVALID_PLAYER_ID)
 		{
-			SendClientMessage(playerid, COLOR_FAILURE, "Player not found.");
+			SendClientMessage(playerid, COLOR_FAILURE, SHOOT_COMMANDS_ERR_PLAYERNOTFOUND);
 			return CMD_SUCCESS;
 		}
 		new Query[128], string[128], pname[MAX_PLAYER_NAME], tname[MAX_PLAYER_NAME];
@@ -600,7 +611,7 @@ COMMAND<PRIVILEGE_ADMINISTRATOR>:staffpromote(cmdid, playerid, params[])
 	{
 		if(pid == INVALID_PLAYER_ID)
 		{
-			SendClientMessage(playerid, COLOR_FAILURE, "Player not found.");
+			SendClientMessage(playerid, COLOR_FAILURE, SHOOT_COMMANDS_ERR_PLAYERNOTFOUND);
 			return CMD_SUCCESS;
 		}
 		new Query[128], string[128], pname[MAX_PLAYER_NAME], tname[MAX_PLAYER_NAME];
@@ -631,7 +642,7 @@ COMMAND<PRIVILEGE_ADMINISTRATOR>:staffadd(cmdid, playerid, params[])
 	{
 		if(pid == INVALID_PLAYER_ID)
 		{
-			SendClientMessage(playerid, COLOR_FAILURE, "Player not found.");
+			SendClientMessage(playerid, COLOR_FAILURE, SHOOT_COMMANDS_ERR_PLAYERNOTFOUND);
 			return CMD_SUCCESS;
 		}
 		new Query[128], string[128], pname[MAX_PLAYER_NAME], tname[MAX_PLAYER_NAME];
@@ -654,6 +665,115 @@ COMMAND<PRIVILEGE_ADMINISTRATOR>:staffadd(cmdid, playerid, params[])
 // Player commands
 // ~-------------~
 
+
+
+/*
+	Command: /veh [vehicle id]
+	Description: Spawns a vehicle.
+	Notes: N/A.
+*/
+COMMAND:veh(cmdid, playerid, params[])
+{
+    new vid, distance, string[128], Float:x, Float:y, Float:z, Float:a;
+    distance = 5;
+
+    GetPlayerPos(playerid, x, y, z);
+    GetPlayerFacingAngle(playerid, a);
+
+    if (GetPlayerVehicleID(playerid))
+    {
+        distance += 2;
+        GetVehicleZAngle(GetPlayerVehicleID(playerid), a);
+    }
+
+    x += (distance * floatsin(-a, degrees));
+    y += (distance * floatcos(-a, degrees));
+
+    if(sscanf(params,"i",vid)) return SendClientMessage(playerid,COLOR_FAILURE,"Usage: /veh [vehicle id]");
+    {
+        CreateVehicle(vid, x, y, z, a, -1, -1, 60);
+        new str_vid[24];
+        valstr(str_vid, vid);
+        format(string, sizeof string, "You have spawned a vehicle with ID %s.", str_vid);
+        SendClientMessage(playerid,COLOR_DEFAULT,string);
+    }
+    return CMD_SUCCESS;
+}
+
+
+
+/*
+	Command: /skin [skin id]
+	Description: Sets your skin.
+	Notes: N/A.
+*/
+COMMAND:skin(cmdid, playerid, params[])
+{
+    new sid, string[128];
+    if(sscanf(params,"i",sid)) return SendClientMessage(playerid,COLOR_FAILURE,"Usage: /skin [skin id]");
+    SetPlayerSkin(playerid, sid);
+    new str_sid[24];
+    valstr(str_sid, sid);
+    format(string, sizeof string, "You have changed your skin to ID %s.", str_sid); 
+    SendClientMessage(playerid,COLOR_DEFAULT,string);
+    return CMD_SUCCESS;
+}
+
+
+
+/*
+	Command: /wep [weapon id]
+	Description: Gives yourself a weapon.
+	Notes: N/A.
+*/
+COMMAND:wep(cmdid, playerid, params[])
+{
+    new wid, string[128];
+    if(sscanf(params,"i",wid)) return SendClientMessage(playerid,COLOR_FAILURE,"Usage: /wep [weapon id]");
+    GivePlayerWeapon(playerid,wid,9999);
+    new str_wid[24];
+    valstr(str_wid, wid);
+    format(string, sizeof string, "You have given yourself weapon ID %s.", str_wid); 
+    SendClientMessage(playerid,COLOR_DEFAULT,string);
+    return CMD_SUCCESS;
+}
+
+
+
+/*
+	Command: /repair
+	Description: Repairs your current vehicle.
+	Requires you to be in the driver seat.
+	on command input.
+	Notes: N/A.
+*/
+COMMAND:repair(cmdid, playerid, params[])
+{
+    if(!IsPlayerInAnyVehicle(playerid)) return SendClientMessage(playerid, COLOR_FAILURE, "You are not in a vehicle.");
+    if(GetPlayerState(playerid) != 2) return SendClientMessage(playerid, COLOR_FAILURE, "You are not in the driver seat.");
+    RepairVehicle(GetPlayerVehicleID(playerid));
+    SendClientMessage(playerid, COLOR_DEFAULT, "Your vehicle has been successfully repaired.");
+    PlayerPlaySound(playerid, 1133, 0.0, 0.0, 0.0);
+    return 1;
+}
+
+
+
+/*
+	Command: /nitro
+	Description: Attaches x10 nitro to your current vehicle (if applicable).
+	Requires you to be in the driver seat.
+	Notes: N/A.
+*/
+COMMAND:nitro(cmdid, playerid, params[])
+{
+    if(!IsPlayerInAnyVehicle(playerid)) return SendClientMessage(playerid, COLOR_FAILURE, "You are not in a vehicle.");
+    if(GetPlayerState(playerid) != 2) return SendClientMessage(playerid, COLOR_FAILURE, "You are not in the driver seat.");
+    AddVehicleComponent(GetPlayerVehicleID(playerid), 1010);
+    SendClientMessage(playerid, COLOR_DEFAULT, "Your vehicle now has x10 nitro.");
+    PlayerPlaySound(playerid, 1133, 0.0, 0.0, 0.0);
+    return 1;
+}
 
 
 
@@ -705,7 +825,7 @@ COMMAND:w(cmdid, playerid, params[])
 	{
 		if(pid == INVALID_PLAYER_ID)
 		{
-			SendClientMessage(playerid, COLOR_FAILURE, "Player not found.");
+			SendClientMessage(playerid, COLOR_FAILURE, SHOOT_COMMANDS_ERR_PLAYERNOTFOUND);
 			return CMD_SUCCESS;
 		}
 		if(isStaff(pid) || isStaff(playerid))
