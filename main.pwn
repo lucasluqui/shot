@@ -7,11 +7,7 @@
 #include <sscanf2>
 
 // basic privileged commands
-//#include "admin/standalones.pwn"
 #include "admin/tempobject.pwn"
-
-// basic player commands
-//#include "player/standalones.pwn"
 
 #pragma tabsize 0
 
@@ -24,7 +20,10 @@
 // colors
 #define COLOR_DEFAULT				0xAAAAAAFF
 #define COLOR_FAILURE           	0xD62B20FF
+#define COLOR_ERROR					0xEA9888FF
 #define COLOR_ADMINCHAT           	0x2A74D6FF
+#define COLOR_STATS					0xFCE68FFF
+#define COLOR_WHISPER				0xFFF64CFF
 #define COLOR_PRIVILEGE_LOWMODERATOR           	"E0914C"
 #define COLOR_PRIVILEGE_MIDMODERATOR           	"E67E22"
 #define COLOR_PRIVILEGE_HIGHMODERATOR           "C96A16"
@@ -476,7 +475,7 @@ public OnPlayerCommandPerformed(cmdid, playerid, cmdtext[], success) {
 	{
 		new string[128];
 		format(string, sizeof(string), SHOOT_COMMANDS_ERR_NOTFOUND, cmdtext);
-		SendClientMessage(playerid,COLOR_FAILURE,string);
+		SendClientMessage(playerid, COLOR_FAILURE, string);
 	}
 	return 1;
 }
@@ -498,7 +497,7 @@ COMMAND:staff(cmdid, playerid, params[])
 {
 	if(!isnull(params))
 	{
-		return SendClientMessage(playerid, COLOR_FAILURE, SHOOT_COMMANDS_ERR_NOPARAMS);
+		return SendClientMessage(playerid, COLOR_ERROR, SHOOT_COMMANDS_ERR_NOPARAMS);
 	}
 
 	new string[128], found;
@@ -518,7 +517,7 @@ COMMAND:staff(cmdid, playerid, params[])
 	}
 	if(found == 0)
 	{
-		SendClientMessage(playerid,COLOR_DEFAULT,"There are no staff members online.");
+		SendClientMessage(playerid, COLOR_DEFAULT, "There are no staff members online.");
 	}
 	return CMD_SUCCESS;
 }
@@ -549,14 +548,14 @@ COMMAND<PRIVILEGE_LOWMODERATOR>:adminmode(cmdid, playerid, params[])
 	if(gPData[playerid][adminEnabled])
 	{
 		SetPlayerHealth(playerid, 100);
-		SendClientMessage(playerid,COLOR_DEFAULT,"Admin mode toggled OFF.");
+		SendClientMessage(playerid,COLOR_DEFAULT,"Administration: Admin mode toggled OFF.");
 		SetPlayerColor(playerid, COLOR_DEFAULT);
 		gPData[playerid][adminEnabled] = 0;
 	}
 	else
 	{
 		SetPlayerHealth(playerid, Float:0x7F800000);
-		SendClientMessage(playerid,COLOR_DEFAULT,"Admin mode toggled ON.");
+		SendClientMessage(playerid,COLOR_DEFAULT,"Administration: Admin mode toggled ON.");
 		SetPlayerColor(playerid, COLOR_FAILURE);
 		gPData[playerid][adminEnabled] = 1;
 	}
@@ -576,11 +575,11 @@ ALT:am = CMD:adminmode;
 COMMAND<PRIVILEGE_ADMINISTRATOR>:setprivilege(cmdid, playerid, params[])
 {
 	new pid, priv;
-	if (sscanf(params, "ud", pid, priv)) SendClientMessage(playerid,COLOR_FAILURE,"Usage: /setprivilege [player id] [privilege]");
+	if (sscanf(params, "ud", pid, priv)) SendClientMessage(playerid, COLOR_ERROR, "Usage: /setprivilege [player id] [privilege]");
 	{
 		if(pid == INVALID_PLAYER_ID)
 		{
-			SendClientMessage(playerid, COLOR_FAILURE, SHOOT_COMMANDS_ERR_PLAYERNOTFOUND);
+			SendClientMessage(playerid, COLOR_ERROR, SHOOT_COMMANDS_ERR_PLAYERNOTFOUND);
 			return CMD_SUCCESS;
 		}
 		new Query[128], string[128], pname[MAX_PLAYER_NAME], tname[MAX_PLAYER_NAME];
@@ -607,11 +606,11 @@ COMMAND<PRIVILEGE_ADMINISTRATOR>:setprivilege(cmdid, playerid, params[])
 COMMAND<PRIVILEGE_ADMINISTRATOR>:staffpromote(cmdid, playerid, params[])
 {
 	new pid;
-	if (sscanf(params, "u", pid)) SendClientMessage(playerid,COLOR_FAILURE,"Usage: /staffpromote [player id]");
+	if (sscanf(params, "u", pid)) SendClientMessage(playerid, COLOR_ERROR, "Usage: /staffpromote [player id]");
 	{
 		if(pid == INVALID_PLAYER_ID)
 		{
-			SendClientMessage(playerid, COLOR_FAILURE, SHOOT_COMMANDS_ERR_PLAYERNOTFOUND);
+			SendClientMessage(playerid, COLOR_ERROR, SHOOT_COMMANDS_ERR_PLAYERNOTFOUND);
 			return CMD_SUCCESS;
 		}
 		new Query[128], string[128], pname[MAX_PLAYER_NAME], tname[MAX_PLAYER_NAME];
@@ -638,11 +637,11 @@ COMMAND<PRIVILEGE_ADMINISTRATOR>:staffpromote(cmdid, playerid, params[])
 COMMAND<PRIVILEGE_ADMINISTRATOR>:staffadd(cmdid, playerid, params[])
 {
 	new pid;
-	if (sscanf(params, "u", pid)) SendClientMessage(playerid,COLOR_FAILURE,"Usage: /staffadd [player id]");
+	if (sscanf(params, "u", pid)) SendClientMessage(playerid, COLOR_ERROR, "Usage: /staffadd [player id]");
 	{
 		if(pid == INVALID_PLAYER_ID)
 		{
-			SendClientMessage(playerid, COLOR_FAILURE, SHOOT_COMMANDS_ERR_PLAYERNOTFOUND);
+			SendClientMessage(playerid, COLOR_ERROR, SHOOT_COMMANDS_ERR_PLAYERNOTFOUND);
 			return CMD_SUCCESS;
 		}
 		new Query[128], string[128], pname[MAX_PLAYER_NAME], tname[MAX_PLAYER_NAME];
@@ -668,8 +667,9 @@ COMMAND<PRIVILEGE_ADMINISTRATOR>:staffadd(cmdid, playerid, params[])
 */
 COMMAND<PRIVILEGE_LOWMODERATOR>:tp(cmdid, playerid, params[])
 {
-    if(isnull(params)) {
-        return SendClientMessage(playerid,COLOR_FAILURE,"Usage: /tp [player name]");
+    if(isnull(params))
+	{
+        return SendClientMessage(playerid, COLOR_ERROR, "Usage: /tp [player name]");
     }
 
     new found, result, target[MAX_PLAYER_NAME], invoker[MAX_PLAYER_NAME], string[128], Float:x, Float:y, Float:z;
@@ -682,15 +682,18 @@ COMMAND<PRIVILEGE_LOWMODERATOR>:tp(cmdid, playerid, params[])
             found++;
         }
     }
-    if(found == 0){
-        SendClientMessage(playerid,COLOR_DEFAULT,"No players found.");
+    if(found == 0)
+	{
+        SendClientMessage(playerid, COLOR_ERROR, "No players found.");
         return CMD_SUCCESS;
     }
-    if(found > 1){
-        SendClientMessage(playerid,COLOR_FAILURE,"More than one player was found with that name input, please be specific.");
+    if(found > 1)
+	{
+        SendClientMessage(playerid, COLOR_ERROR, "More than one player was found with that input, please be specific.");
         return CMD_SUCCESS;
     }
-    if(found == 1){
+    if(found == 1)
+	{
         GetPlayerPos(result, x, y, z);
         if(IsPlayerInAnyVehicle(playerid) && GetPlayerState(playerid) == 2)
         {
@@ -702,9 +705,9 @@ COMMAND<PRIVILEGE_LOWMODERATOR>:tp(cmdid, playerid, params[])
         }
         GetPlayerName(result, target, sizeof(target));
         GetPlayerName(playerid, invoker, sizeof(invoker));
-        format(string, sizeof string, "You were teleported to %s.", target); 
+        format(string, sizeof string, "Administration: You were teleported to %s.", target); 
         SendClientMessage(playerid,COLOR_DEFAULT,string);
-        format(string, sizeof string, "%s has teleported to your position.", invoker); 
+        format(string, sizeof string, "Administration: %s has teleported to your position.", invoker); 
         SendClientMessage(result,COLOR_DEFAULT,string);
         return CMD_SUCCESS;
     }
@@ -720,8 +723,9 @@ COMMAND<PRIVILEGE_LOWMODERATOR>:tp(cmdid, playerid, params[])
 */
 COMMAND<PRIVILEGE_LOWMODERATOR>:bring(cmdid, playerid, params[])
 {
-    if(isnull(params)) {
-        return SendClientMessage(playerid,COLOR_FAILURE,"Usage: /bring [player name]");
+    if(isnull(params))
+	{
+        return SendClientMessage(playerid, COLOR_ERROR, "Usage: /bring [player name]");
     }
 
     new found, result, target[MAX_PLAYER_NAME], invoker[MAX_PLAYER_NAME], string[128], Float:x, Float:y, Float:z;
@@ -729,20 +733,24 @@ COMMAND<PRIVILEGE_LOWMODERATOR>:bring(cmdid, playerid, params[])
     {
         new pname[MAX_PLAYER_NAME];
         GetPlayerName(i, pname, sizeof(pname));
-        if(strfind(pname, params, true) != -1) {
+        if(strfind(pname, params, true) != -1)
+		{
             result = i;
             found++;
         }
     }
-    if(found == 0){
-        SendClientMessage(playerid,COLOR_DEFAULT,"No players found.");
+    if(found == 0)
+	{
+        SendClientMessage(playerid, COLOR_ERROR, "No players found.");
         return CMD_SUCCESS;
     }
-    if(found > 1){
-        SendClientMessage(playerid,COLOR_FAILURE,"More than one player was found with that name input, please be specific.");
+    if(found > 1)
+	{
+        SendClientMessage(playerid, COLOR_ERROR, "More than one player was found with that input, please be specific.");
         return CMD_SUCCESS;
     }
-    if(found == 1){
+    if(found == 1)
+	{
         GetPlayerPos(playerid, x, y, z);
         if(IsPlayerInAnyVehicle(result) && GetPlayerState(result) == 2)
         {
@@ -754,9 +762,9 @@ COMMAND<PRIVILEGE_LOWMODERATOR>:bring(cmdid, playerid, params[])
         }
         GetPlayerName(result, target, sizeof(target));
         GetPlayerName(playerid, invoker, sizeof(invoker));
-        format(string, sizeof string, "You brought %s to your position.", target); 
+        format(string, sizeof string, "Administration: You brought %s to your position.", target); 
         SendClientMessage(playerid,COLOR_DEFAULT,string);
-        format(string, sizeof string, "%s brought you to his position.", invoker); 
+        format(string, sizeof string, "Administration: %s brought you to his position.", invoker); 
         SendClientMessage(result,COLOR_DEFAULT,string);
         return CMD_SUCCESS;
     }
@@ -776,18 +784,18 @@ COMMAND<PRIVILEGE_LOWMODERATOR>:otp(cmdid, playerid, params[])
     
     if(pid == INVALID_PLAYER_ID)
     {
-        SendClientMessage(playerid, COLOR_FAILURE, "Player not found.");
+        SendClientMessage(playerid, COLOR_ERROR, "Player not found.");
         return CMD_SUCCESS;
     }
     
-    if(sscanf(params,"i",pid)) return SendClientMessage(playerid,COLOR_FAILURE,"Usage: /otp [player id]");
+    if(sscanf(params,"i",pid)) return SendClientMessage(playerid, COLOR_ERROR, "Usage: /otp [player id]");
     GetPlayerPos(pid, x, y, z);
     SetPlayerPos(playerid, x+2, y, z+2);
     GetPlayerName(pid, target, sizeof(target));
     GetPlayerName(playerid, invoker, sizeof(invoker));
-    format(string, sizeof string, "You were teleported to %s.", target); 
+    format(string, sizeof string, "Administration: You were teleported to %s.", target); 
     SendClientMessage(playerid,COLOR_DEFAULT,string);
-    format(string, sizeof string, "%s has teleported to your position.", invoker); 
+    format(string, sizeof string, "Administration: %s has teleported to your position.", invoker); 
     SendClientMessage(pid,COLOR_DEFAULT,string);
     return CMD_SUCCESS;
 }
@@ -805,18 +813,18 @@ COMMAND<PRIVILEGE_LOWMODERATOR>:obring(cmdid, playerid, params[])
     
     if(pid == INVALID_PLAYER_ID)
     {
-        SendClientMessage(playerid, COLOR_FAILURE, "Player not found.");
+        SendClientMessage(playerid, COLOR_ERROR, "Player not found.");
         return CMD_SUCCESS;
     }
     
-    if(sscanf(params,"i",pid)) return SendClientMessage(playerid,COLOR_FAILURE,"Usage: /obring [player id]");
+    if(sscanf(params,"i",pid)) return SendClientMessage(playerid, COLOR_ERROR, "Usage: /obring [player id]");
     GetPlayerPos(playerid, x, y, z);
     SetPlayerPos(pid, x+2, y, z+2);
     GetPlayerName(pid, target, sizeof(target));
     GetPlayerName(playerid, invoker, sizeof(invoker));
-    format(string, sizeof string, "You brought %s to your position.", target); 
+    format(string, sizeof string, "Administration: You brought %s to your position.", target); 
     SendClientMessage(playerid,COLOR_DEFAULT,string);
-    format(string, sizeof string, "%s brought you to his position.", invoker); 
+    format(string, sizeof string, "Administration: %s brought you to his position.", invoker); 
     SendClientMessage(pid,COLOR_DEFAULT,string);
     return CMD_SUCCESS;
 }
@@ -831,7 +839,7 @@ COMMAND<PRIVILEGE_LOWMODERATOR>:obring(cmdid, playerid, params[])
 COMMAND<PRIVILEGE_LOWMODERATOR>:bringveh(cmdid, playerid, params[])
 {
     new vid, distance, string[128], Float:x, Float:y, Float:z, Float:a;
-    if(sscanf(params,"i",vid)) return SendClientMessage(playerid,COLOR_FAILURE,"Usage: /bringveh [vehicle id]");
+    if(sscanf(params,"i",vid)) return SendClientMessage(playerid, COLOR_ERROR, "Usage: /bringveh [vehicle id]");
     
     distance = 5;
     
@@ -848,7 +856,7 @@ COMMAND<PRIVILEGE_LOWMODERATOR>:bringveh(cmdid, playerid, params[])
     
     SetVehiclePos(vid, x, y, z);
     
-    format(string, sizeof string, "You brought vehicle ID %d to your position.", vid); 
+    format(string, sizeof string, "Administration: You brought vehicle ID %d to your position.", vid); 
     SendClientMessage(playerid,COLOR_DEFAULT,string);
     return CMD_SUCCESS;
 }
@@ -863,11 +871,11 @@ COMMAND<PRIVILEGE_LOWMODERATOR>:bringveh(cmdid, playerid, params[])
 COMMAND<PRIVILEGE_ADMINISTRATOR>:kill(cmdid, playerid, params[])
 {
     new pid;
-    if(sscanf(params,"i",pid)) return SendClientMessage(playerid,COLOR_FAILURE,"Usage: /kill [player id]");
+    if(sscanf(params,"i",pid)) return SendClientMessage(playerid, COLOR_ERROR, "Usage: /kill [player id]");
     
     if(pid == INVALID_PLAYER_ID)
     {
-        SendClientMessage(playerid, COLOR_FAILURE, "Player not found.");
+        SendClientMessage(playerid, COLOR_ERROR, "Player not found.");
         return CMD_SUCCESS;
     }
     
@@ -885,7 +893,7 @@ COMMAND<PRIVILEGE_ADMINISTRATOR>:kill(cmdid, playerid, params[])
 COMMAND<PRIVILEGE_ADMINISTRATOR>:timeset(cmdid, playerid, params[])
 {
     new timeid;
-    if(sscanf(params,"i",timeid)) return SendClientMessage(playerid,COLOR_FAILURE,"Usage: /timeset [time id]");
+    if(sscanf(params,"i",timeid)) return SendClientMessage(playerid, COLOR_ERROR, "Usage: /timeset [time id]");
     else SetWorldTime(timeid);
     return CMD_SUCCESS;
 }
@@ -900,7 +908,7 @@ COMMAND<PRIVILEGE_ADMINISTRATOR>:timeset(cmdid, playerid, params[])
 COMMAND<PRIVILEGE_ADMINISTRATOR>:weatherset(cmdid, playerid, params[])
 {
     new weatherid;
-    if(sscanf(params,"i",weatherid)) return SendClientMessage(playerid,COLOR_FAILURE,"Usage: /weatherset [weather id]");
+    if(sscanf(params,"i",weatherid)) return SendClientMessage(playerid, COLOR_ERROR, "Usage: /weatherset [weather id]");
     else SetWeather(weatherid);
     return CMD_SUCCESS;
 }
@@ -935,7 +943,7 @@ COMMAND:veh(cmdid, playerid, params[])
     x += (distance * floatsin(-a, degrees));
     y += (distance * floatcos(-a, degrees));
 
-    if(sscanf(params,"i",vid)) return SendClientMessage(playerid,COLOR_FAILURE,"Usage: /veh [vehicle id]");
+    if(sscanf(params,"i",vid)) return SendClientMessage(playerid, COLOR_ERROR, "Usage: /veh [vehicle id]");
     {
         CreateVehicle(vid, x, y, z, a, -1, -1, 60);
         new str_vid[24];
@@ -956,7 +964,7 @@ COMMAND:veh(cmdid, playerid, params[])
 COMMAND:skin(cmdid, playerid, params[])
 {
     new sid, string[128];
-    if(sscanf(params,"i",sid)) return SendClientMessage(playerid,COLOR_FAILURE,"Usage: /skin [skin id]");
+    if(sscanf(params,"i",sid)) return SendClientMessage(playerid, COLOR_ERROR, "Usage: /skin [skin id]");
     SetPlayerSkin(playerid, sid);
     new str_sid[24];
     valstr(str_sid, sid);
@@ -975,12 +983,12 @@ COMMAND:skin(cmdid, playerid, params[])
 COMMAND:wep(cmdid, playerid, params[])
 {
     new wid, string[128];
-    if(sscanf(params,"i",wid)) return SendClientMessage(playerid,COLOR_FAILURE,"Usage: /wep [weapon id]");
+    if(sscanf(params,"i",wid)) return SendClientMessage(playerid, COLOR_ERROR, "Usage: /wep [weapon id]");
     GivePlayerWeapon(playerid,wid,9999);
     new str_wid[24];
     valstr(str_wid, wid);
     format(string, sizeof string, "You have given yourself weapon ID %s.", str_wid); 
-    SendClientMessage(playerid,COLOR_DEFAULT,string);
+    SendClientMessage(playerid, COLOR_DEFAULT, string);
     return CMD_SUCCESS;
 }
 
@@ -995,8 +1003,8 @@ COMMAND:wep(cmdid, playerid, params[])
 */
 COMMAND:repair(cmdid, playerid, params[])
 {
-    if(!IsPlayerInAnyVehicle(playerid)) return SendClientMessage(playerid, COLOR_FAILURE, "You are not in a vehicle.");
-    if(GetPlayerState(playerid) != 2) return SendClientMessage(playerid, COLOR_FAILURE, "You are not in the driver seat.");
+    if(!IsPlayerInAnyVehicle(playerid)) return SendClientMessage(playerid, COLOR_ERROR, "You are not in a vehicle.");
+    if(GetPlayerState(playerid) != 2) return SendClientMessage(playerid, COLOR_ERROR, "You are not in the driver seat.");
     RepairVehicle(GetPlayerVehicleID(playerid));
     SendClientMessage(playerid, COLOR_DEFAULT, "Your vehicle has been successfully repaired.");
     PlayerPlaySound(playerid, 1133, 0.0, 0.0, 0.0);
@@ -1013,8 +1021,8 @@ COMMAND:repair(cmdid, playerid, params[])
 */
 COMMAND:nitro(cmdid, playerid, params[])
 {
-    if(!IsPlayerInAnyVehicle(playerid)) return SendClientMessage(playerid, COLOR_FAILURE, "You are not in a vehicle.");
-    if(GetPlayerState(playerid) != 2) return SendClientMessage(playerid, COLOR_FAILURE, "You are not in the driver seat.");
+    if(!IsPlayerInAnyVehicle(playerid)) return SendClientMessage(playerid, COLOR_ERROR, "You are not in a vehicle.");
+    if(GetPlayerState(playerid) != 2) return SendClientMessage(playerid, COLOR_ERROR, "You are not in the driver seat.");
     AddVehicleComponent(GetPlayerVehicleID(playerid), 1010);
     SendClientMessage(playerid, COLOR_DEFAULT, "Your vehicle now has x10 nitro.");
     PlayerPlaySound(playerid, 1133, 0.0, 0.0, 0.0);
@@ -1033,7 +1041,7 @@ COMMAND:id(cmdid, playerid, params[])
 {
 	if(isnull(params))
 	{
-		return SendClientMessage(playerid,COLOR_FAILURE,"Usage: /id [name]");
+		return SendClientMessage(playerid,COLOR_FAILURE,"Usage: /id [player name]");
 	}
 
 	new string[128], found;
@@ -1044,14 +1052,14 @@ COMMAND:id(cmdid, playerid, params[])
 		GetPlayerName(i, pname, sizeof(pname));
 		if(strfind(pname, params, true) != -1)
 		{
-			format(string, sizeof(string), "%s (ID: %d) (Level: %d)", pname, i, gPData[i][level]);
+			format(string, sizeof(string), "%s (ID %d) (Level: %d)", pname, i, gPData[i][level]);
 			SendClientMessage(playerid,COLOR_DEFAULT,string);
 			found++;
 		}
 	}
 	if(found == 0)
 	{
-		SendClientMessage(playerid,COLOR_DEFAULT,"No players found.");
+		SendClientMessage(playerid, COLOR_DEFAULT, SHOOT_COMMANDS_ERR_PLAYERNOTFOUND);
 	}
 	return CMD_SUCCESS;
 }
@@ -1067,7 +1075,7 @@ COMMAND:id(cmdid, playerid, params[])
 COMMAND:w(cmdid, playerid, params[])
 {
 	new pid, msg[128];
-	if(sscanf(params, "us", pid, msg)) SendClientMessage(playerid,COLOR_FAILURE,"Usage: /w [staff id] [message]");
+	if(sscanf(params, "us", pid, msg)) SendClientMessage(playerid, COLOR_FAILURE, "Usage: /w [staff id] [message]");
 	{
 		if(pid == INVALID_PLAYER_ID)
 		{
@@ -1078,15 +1086,15 @@ COMMAND:w(cmdid, playerid, params[])
 		{
 			new string[128], pname[MAX_PLAYER_NAME];
 			GetPlayerName(playerid, pname, sizeof(pname));
-			format(string, sizeof string, "Administration: %s (ID: %d) whispers: %s", pname, playerid, msg);
-			SendClientMessage(pid, COLOR_DEFAULT, string);
+			format(string, sizeof string, "Administration: %s (ID %d) whispers: %s", pname, playerid, msg);
+			SendClientMessage(pid, COLOR_WHISPER, string);
 			GetPlayerName(pid, pname, sizeof(pname));
-			format(string, sizeof string, "Administration: you whispered %s (ID: %d): %s", pname, pid, msg);
-			SendClientMessage(playerid, COLOR_DEFAULT, string);
+			format(string, sizeof string, "Administration: you whispered %s (ID %d): %s", pname, pid, msg);
+			SendClientMessage(playerid, COLOR_WHISPER, string);
 		}
 		else
 		{
-			SendClientMessage(playerid, COLOR_FAILURE, "You can only whisper staff members. (/staff)");
+			SendClientMessage(playerid, COLOR_ERROR, "You can only whisper staff members. (/staff)");
 		}
 	}
 	return CMD_SUCCESS;
@@ -1104,6 +1112,6 @@ COMMAND:stats(cmdid, playerid, params[])
 	new string[128];
 	SendClientMessage(playerid,COLOR_DEFAULT,"* Your stats:");
 	format(string, sizeof(string), "ID DB: %d | Rank: %s | Membership: %s | Level: %d | Experience: %d/%d | Balance: %d | Skin ID: %d", gPData[playerid][id], getPrivilegeName(playerid), getMembershipName(playerid), gPData[playerid][level], gPData[playerid][xp], calcRequiredXP(gPData[playerid][level]), gPData[playerid][balance], gPData[playerid][skinid]);
-	SendClientMessage(playerid,COLOR_DEFAULT,string);
+	SendClientMessage(playerid, COLOR_STATS, string);
 	return CMD_SUCCESS;
 }
