@@ -1,2 +1,2 @@
-pawncc.exe main.pwn
+pawncc.exe shoot.pwn
 pause
