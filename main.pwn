@@ -510,7 +510,7 @@ COMMAND:staff(cmdid, playerid, params[])
 		{
 			new pname[MAX_PLAYER_NAME];
 			GetPlayerName(i, pname, sizeof(pname));
-			format(string, sizeof(string), "{%s}** %s %s (ID: %d)", getPrivilegeColor(i), getPrivilegeName(i), pname, i);
+			format(string, sizeof(string), "{%s}** %s %s (ID %d)", getPrivilegeColor(i), getPrivilegeName(i), pname, i);
 			SendClientMessage(playerid,COLOR_DEFAULT,string);
 			found++;
 		}
@@ -1110,7 +1110,7 @@ COMMAND:w(cmdid, playerid, params[])
 COMMAND:stats(cmdid, playerid, params[])
 {
 	new string[128];
-	SendClientMessage(playerid,COLOR_DEFAULT,"* Your stats:");
+	SendClientMessage(playerid,COLOR_STATS,"* Your stats:");
 	format(string, sizeof(string), "ID DB: %d | Rank: %s | Membership: %s | Level: %d | Experience: %d/%d | Balance: %d | Skin ID: %d", gPData[playerid][id], getPrivilegeName(playerid), getMembershipName(playerid), gPData[playerid][level], gPData[playerid][xp], calcRequiredXP(gPData[playerid][level]), gPData[playerid][balance], gPData[playerid][skinid]);
 	SendClientMessage(playerid, COLOR_STATS, string);
 	return CMD_SUCCESS;
