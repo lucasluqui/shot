@@ -11,6 +11,7 @@ enum playerdata
     xp,
     balance,
     skinid,
+    dr,
     Float:pposx,  
     Float:pposy,  
     Float:pposz,

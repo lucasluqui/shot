@@ -44,6 +44,7 @@
 #include "core/enums/playerdata.pwn"
 #include "core/enums/privileges.pwn"
 #include "core/enums/memberships.pwn"
+#include "core/enums/disconnects.pwn"
 
 new DB: Database;
 new gPData[MAX_PLAYERS][playerdata];
@@ -100,6 +101,7 @@ public pullData(playerid)
 		gPData[playerid][xp] = db_get_field_assoc_int(Result, "xp");
 		gPData[playerid][balance] = db_get_field_assoc_int(Result, "balance");
 		gPData[playerid][skinid] = db_get_field_assoc_int(Result, "skinid");
+		gPData[playerid][dr] = db_get_field_assoc_int(Result, "dr");
 		gPData[playerid][pposx] = db_get_field_assoc_int(Result, "pposx");
 		gPData[playerid][pposy] = db_get_field_assoc_int(Result, "pposy");
 		gPData[playerid][pposz] = db_get_field_assoc_int(Result, "pposz");
@@ -110,11 +112,11 @@ public pullData(playerid)
 
 public submitData(playerid)
 {
-	new Query[300];
+	new Query[320];
 
 	GetPlayerPos(playerid, gPData[playerid][pposx], gPData[playerid][pposy], gPData[playerid][pposz]);
 	GetPlayerFacingAngle(playerid, gPData[playerid][pposa]);
-	format(Query, sizeof Query, "UPDATE playerdata SET level=%d, xp=%d, balance=%d, pposx=%f, pposy=%f, pposz=%f, pposa=%f, skinid=%d WHERE id = %d", gPData[playerid][level], gPData[playerid][xp], gPData[playerid][balance], gPData[playerid][pposx], gPData[playerid][pposy], gPData[playerid][pposz], gPData[playerid][pposa], gPData[playerid][skinid], gPData[playerid][id]);
+	format(Query, sizeof Query, "UPDATE playerdata SET level=%d, xp=%d, balance=%d, dr=%d, pposx=%f, pposy=%f, pposz=%f, pposa=%f, skinid=%d WHERE id = %d", gPData[playerid][level], gPData[playerid][xp], gPData[playerid][balance], gPData[playerid][dr], gPData[playerid][pposx], gPData[playerid][pposy], gPData[playerid][pposz], gPData[playerid][pposa], gPData[playerid][skinid], gPData[playerid][id]);
 	db_query(Database, Query);
 }
 
@@ -192,6 +194,23 @@ stock getMembershipName(playerid)
 	return mbname;
 }
 
+stock getDisconnectReason(pname)
+{
+	new DBResult: Result, buf[129], dcr;
+	format(buf, sizeof buf, "SELECT dr FROM playerdata WHERE name = '%q' LIMIT 1", pname);
+	Result = db_query(Database, buf);
+	if(db_num_rows(Result))
+	{
+		dcr = db_get_field_assoc_int(Result, "dr");
+	}
+	else
+	{
+		dcr = -1;
+	}
+	db_free_result(Result);
+	return dcr;
+}
+
 forward increaseLevel(playerid);
 forward pullData(playerid);
 forward submitData(playerid);
@@ -209,7 +228,7 @@ main()
 
 public OnGameModeInit()
 {	
-	SetGameModeText("project-shoot");
+	SetGameModeText("Deathmatch/Freeroam");
 	ShowPlayerMarkers(PLAYER_MARKERS_MODE_GLOBAL);
 	ShowNameTags(1);
 	SetNameTagDrawDistance(40.0);
@@ -236,8 +255,8 @@ public OnGameModeInit()
 	else
 	{ 
 		db_query(Database, "PRAGMA synchronous = OFF");
-		new createTable[600] = "CREATE TABLE IF NOT EXISTS playerdata (id INTEGER PRIMARY KEY AUTOINCREMENT, name VARCHAR(24) COLLATE NOCASE, password VARCHAR(129), privilege INTEGER DEFAULT 0 NOT NULL, membership INTEGER DEFAULT 0 NOT NULL, level INTEGER DEFAULT 1 NOT NULL, xp INTEGER DEFAULT 0 NOT NULL,";
-		strcat(createTable, " balance INTEGER DEFAULT 2500 NOT NULL, skinid INTEGER DEFAULT 73 NOT NULL, pposx REAL DEFAULT 0.0 NOT NULL, pposy REAL DEFAULT 0.0 NOT NULL, pposz REAL DEFAULT 0.0 NOT NULL, pposa REAL DEFAULT 0.0 NOT NULL)");
+		new createTable[620] = "CREATE TABLE IF NOT EXISTS playerdata (id INTEGER PRIMARY KEY AUTOINCREMENT, name VARCHAR(24) COLLATE NOCASE, password VARCHAR(129), privilege INTEGER DEFAULT 0 NOT NULL, membership INTEGER DEFAULT 0 NOT NULL, level INTEGER DEFAULT 1 NOT NULL, xp INTEGER DEFAULT 0 NOT NULL,";
+		strcat(createTable, " balance INTEGER DEFAULT 2500 NOT NULL, skinid INTEGER DEFAULT 73 NOT NULL, dr INTEGER DEFAULT 0 NOT NULL, pposx REAL DEFAULT 0.0 NOT NULL, pposy REAL DEFAULT 0.0 NOT NULL, pposz REAL DEFAULT 0.0 NOT NULL, pposa REAL DEFAULT 0.0 NOT NULL)");
 		db_query(Database, createTable);
 	} 
 	return 1; 
@@ -245,6 +264,10 @@ public OnGameModeInit()
 
 public OnGameModeExit() 
 { 
+	for(new i; i < MAX_PLAYERS; i++)
+	{
+		submitData(i);
+	}
 	db_close(Database);
 	return 1; 
 }  
@@ -280,6 +303,12 @@ public OnPlayerConnect(playerid)
 
 public OnPlayerDisconnect(playerid, reason) 
 {
+	switch(reason)
+	{
+		case 0:{gPData[playerid][dr] = DISCONNECT_CONN_LOST_OR_CRASH;}
+		case 1:{gPData[playerid][dr] = DISCONNECT_VOLUNTARILY;}
+		case 2:{gPData[playerid][dr] = DISCONNECT_KICKBAN;}
+	}
 	submitData(playerid);
 	
 	new tmp[playerdata]; 
@@ -489,36 +518,18 @@ public OnPlayerCommandPerformed(cmdid, playerid, cmdtext[], success) {
 
 
 /*
-	Command: /staff
-	Description: Displays current online staff members.
+	Command: /restart
+	Description: Restarts gamemode.
 	Notes: N/A.
 */
-COMMAND:staff(cmdid, playerid, params[])
+COMMAND<PRIVILEGE_FOUNDER>:restart(cmdid, params[])
 {
-	if(!isnull(params))
-	{
-		return SendClientMessage(playerid, COLOR_ERROR, SHOOT_COMMANDS_ERR_NOPARAMS);
-	}
-
-	new string[128], found;
-	format(string, sizeof(string), "* Online Staff:");
-	SendClientMessage(playerid,COLOR_DEFAULT,string);
-
 	for(new i; i < MAX_PLAYERS; i++)
 	{
-		if(gPData[i][privilege] >= PRIVILEGE_LOWMODERATOR)
-		{
-			new pname[MAX_PLAYER_NAME];
-			GetPlayerName(i, pname, sizeof(pname));
-			format(string, sizeof(string), "{%s}** %s %s (ID %d)", getPrivilegeColor(i), getPrivilegeName(i), pname, i);
-			SendClientMessage(playerid,COLOR_DEFAULT,string);
-			found++;
-		}
+		submitData(i);
 	}
-	if(found == 0)
-	{
-		SendClientMessage(playerid, COLOR_DEFAULT, "There are no staff members online.");
-	}
+	SendClientMessageToAll(COLOR_DEFAULT, "Server: Stats saved. Restarting server...");
+	SendRconCommand("gmx");
 	return CMD_SUCCESS;
 }
 
@@ -915,6 +926,43 @@ COMMAND<PRIVILEGE_ADMINISTRATOR>:weatherset(cmdid, playerid, params[])
 
 
 
+/*
+	Command: /dr [player name]
+	Description: Checks player disconnect reason.
+	Notes: N/A.
+*/
+COMMAND<PRIVILEGE_LOWMODERATOR>:dr(cmdid, playerid, params[])
+{
+    new pname;
+    if(sscanf(params,"s",pname)) SendClientMessage(playerid, COLOR_ERROR, "Usage: /dr [player name]");
+    else
+	{
+		new dcr, reason[64];
+		dcr = getDisconnectReason(pname);
+		if(dcr >= 0)
+		{
+			switch(dcr)
+			{
+				case DISCONNECT_VOLUNTARILY:{reason = "Voluntarily";}
+				case DISCONNECT_CONN_LOST_OR_CRASH:{reason = "Connection Lost or Crash";}
+				case DISCONNECT_ANTICHEAT:{reason = "Kicked by Anticheat";}
+				case DISCONNECT_KICKBAN:{reason = "Kicked/Banned by Admin";}
+				default:{reason = "Unknown";}
+			}
+			new string[128];
+			format(string, sizeof string, "Administration: %s's Disconnect Reason: %s.", pname, reason);
+			SendClientMessage(playerid, COLOR_DEFAULT, string);
+		}
+		else
+		{
+			SendClientMessage(playerid, COLOR_DEFAULT, SHOOT_COMMANDS_ERR_PLAYERNOTFOUND);
+		}
+	}
+    return CMD_SUCCESS;
+}
+
+
+
 // ~-------------~
 // Player commands
 // ~-------------~
@@ -1096,6 +1144,42 @@ COMMAND:w(cmdid, playerid, params[])
 		{
 			SendClientMessage(playerid, COLOR_ERROR, "You can only whisper staff members. (/staff)");
 		}
+	}
+	return CMD_SUCCESS;
+}
+
+
+
+/*
+	Command: /staff
+	Description: Displays current online staff members.
+	Notes: N/A.
+*/
+COMMAND:staff(cmdid, playerid, params[])
+{
+	if(!isnull(params))
+	{
+		return SendClientMessage(playerid, COLOR_ERROR, SHOOT_COMMANDS_ERR_NOPARAMS);
+	}
+
+	new string[128], found;
+	format(string, sizeof(string), "* Online Staff:");
+	SendClientMessage(playerid,COLOR_DEFAULT,string);
+
+	for(new i; i < MAX_PLAYERS; i++)
+	{
+		if(gPData[i][privilege] >= PRIVILEGE_LOWMODERATOR)
+		{
+			new pname[MAX_PLAYER_NAME];
+			GetPlayerName(i, pname, sizeof(pname));
+			format(string, sizeof(string), "{%s}** %s %s (ID %d)", getPrivilegeColor(i), getPrivilegeName(i), pname, i);
+			SendClientMessage(playerid,COLOR_DEFAULT,string);
+			found++;
+		}
+	}
+	if(found == 0)
+	{
+		SendClientMessage(playerid, COLOR_DEFAULT, "There are no staff members online.");
 	}
 	return CMD_SUCCESS;
 }
