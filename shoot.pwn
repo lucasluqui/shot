@@ -194,10 +194,10 @@ stock getMembershipName(playerid)
 	return mbname;
 }
 
-stock getDisconnectReason(pname)
+public getDisconnectReason(pname)
 {
 	new DBResult: Result, buf[129], dcr;
-	format(buf, sizeof buf, "SELECT dr FROM playerdata WHERE name = '%q' LIMIT 1", pname);
+	format(buf, sizeof buf, "SELECT * FROM playerdata WHERE name = '%q' LIMIT 1", pname);
 	Result = db_query(Database, buf);
 	if(db_num_rows(Result))
 	{
@@ -205,7 +205,7 @@ stock getDisconnectReason(pname)
 	}
 	else
 	{
-		dcr = -1;
+		dcr = 8;
 	}
 	db_free_result(Result);
 	return dcr;
@@ -219,6 +219,7 @@ forward isStaff(playerid);
 forward isCash(playerid);
 forward getPrivilegeName(playerid);
 forward getMembershipName(playerid);
+forward getDisconnectReason(pname);
 native WP_Hash(buffer[], len, const str[]); // required to work with WP hashes on register/login.
 
 main()
@@ -933,32 +934,28 @@ COMMAND<PRIVILEGE_ADMINISTRATOR>:weatherset(cmdid, playerid, params[])
 */
 COMMAND<PRIVILEGE_LOWMODERATOR>:dr(cmdid, playerid, params[])
 {
-    new pname;
-    if(sscanf(params,"s",pname)) SendClientMessage(playerid, COLOR_ERROR, "Usage: /dr [player name]");
-    else
+	new dcr, reason[64];
+	dcr = getDisconnectReason(params[0]);
+	if(dcr < 8)
 	{
-		new dcr, reason[64];
-		dcr = getDisconnectReason(pname);
-		if(dcr >= 0)
+		switch(dcr)
 		{
-			switch(dcr)
-			{
-				case DISCONNECT_VOLUNTARILY:{reason = "Voluntarily";}
-				case DISCONNECT_CONN_LOST_OR_CRASH:{reason = "Connection Lost or Crash";}
-				case DISCONNECT_ANTICHEAT:{reason = "Kicked by Anticheat";}
-				case DISCONNECT_KICKBAN:{reason = "Kicked/Banned by Admin";}
-				default:{reason = "Unknown";}
-			}
-			new string[128];
-			format(string, sizeof string, "Administration: %s's Disconnect Reason: %s.", pname, reason);
-			SendClientMessage(playerid, COLOR_DEFAULT, string);
+			case DISCONNECT_VOLUNTARILY:{reason = "Voluntarily";}
+			case DISCONNECT_CONN_LOST_OR_CRASH:{reason = "Connection Lost or Crash";}
+			case DISCONNECT_ANTICHEAT:{reason = "Kicked by Anticheat";}
+			case DISCONNECT_KICKBAN:{reason = "Kicked/Banned by Admin";}
+			default:{reason = "Unknown";}
 		}
-		else
-		{
-			SendClientMessage(playerid, COLOR_DEFAULT, SHOOT_COMMANDS_ERR_PLAYERNOTFOUND);
-		}
+		new string[128];
+		format(string, sizeof string, "Administration: %s DR: %s.", params, reason);
+		SendClientMessage(playerid, COLOR_DEFAULT, string);
 	}
-    return CMD_SUCCESS;
+	else
+	{
+		SendClientMessage(playerid, COLOR_DEFAULT, SHOOT_COMMANDS_ERR_PLAYERNOTFOUND);
+		return CMD_SUCCESS;
+	}
+	return CMD_SUCCESS;
 }
 
 
@@ -1194,7 +1191,7 @@ COMMAND:staff(cmdid, playerid, params[])
 COMMAND:stats(cmdid, playerid, params[])
 {
 	new string[128];
-	SendClientMessage(playerid,COLOR_STATS,"* Your stats:");
+	SendClientMessage(playerid, COLOR_STATS, "* Your stats:");
 	format(string, sizeof(string), "ID DB: %d | Rank: %s | Membership: %s | Level: %d | Experience: %d/%d | Balance: %d | Skin ID: %d", gPData[playerid][id], getPrivilegeName(playerid), getMembershipName(playerid), gPData[playerid][level], gPData[playerid][xp], calcRequiredXP(gPData[playerid][level]), gPData[playerid][balance], gPData[playerid][skinid]);
 	SendClientMessage(playerid, COLOR_STATS, string);
 	return CMD_SUCCESS;
