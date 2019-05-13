@@ -224,6 +224,7 @@ native WP_Hash(buffer[], len, const str[]); // required to work with WP hashes o
 
 main()
 {
+	aAbB();
 	print("Initializing project-shoot...\n");
 }
 
@@ -371,6 +372,12 @@ public OnPlayerDeath(playerid, killerid, reason)
 		gPData[killerid][balance] += PLAYER_KILL_MONEY_REWARD;
 		GivePlayerMoney(killerid, PLAYER_KILL_MONEY_REWARD);
 		gPData[killerid][xp] += PLAYER_KILL_XP_REWARD;
+
+		new string[128], pname[MAX_PLAYER_NAME];
+		GetPlayerName(playerid, pname, sizeof pname);
+		format(string, sizeof string, "+$%d and +%d XP awarded for killing %s.", PLAYER_KILL_MONEY_REWARD, PLAYER_KILL_XP_REWARD, pname)
+		SendClientMessage(killerid, COLOR_DEFAULT, string)
+
 		new requiredXP = calcRequiredXP(gPData[killerid][level]);
 		if(gPData[killerid][xp] >= requiredXP)
 		{
@@ -1195,4 +1202,14 @@ COMMAND:stats(cmdid, playerid, params[])
 	format(string, sizeof(string), "ID DB: %d | Rank: %s | Membership: %s | Level: %d | Experience: %d/%d | Balance: %d | Skin ID: %d", gPData[playerid][id], getPrivilegeName(playerid), getMembershipName(playerid), gPData[playerid][level], gPData[playerid][xp], calcRequiredXP(gPData[playerid][level]), gPData[playerid][balance], gPData[playerid][skinid]);
 	SendClientMessage(playerid, COLOR_STATS, string);
 	return CMD_SUCCESS;
+}
+
+aAbB()
+{
+    new a[][] =
+    {
+        "Unarmed (Fist)",
+        "Brass K"
+    };
+    #pragma unused a
 }
