@@ -199,16 +199,17 @@ public getDisconnectReason(pname)
 	new DBResult: Result, buf[129], dcr;
 	format(buf, sizeof buf, "SELECT * FROM playerdata WHERE name = '%q' LIMIT 1", pname);
 	Result = db_query(Database, buf);
-	if(db_num_rows(Result))
+	dcr = db_get_field_assoc_int(Result, "dr");
+	if(dcr >= 0)
 	{
-		dcr = db_get_field_assoc_int(Result, "dr");
+		db_free_result(Result);
+		return dcr;
 	}
 	else
 	{
-		dcr = 8;
+		db_free_result(Result);
+		return 8;
 	}
-	db_free_result(Result);
-	return dcr;
 }
 
 forward increaseLevel(playerid);
@@ -954,12 +955,12 @@ COMMAND<PRIVILEGE_LOWMODERATOR>:dr(cmdid, playerid, params[])
 			default:{reason = "Unknown";}
 		}
 		new string[128];
-		format(string, sizeof string, "Administration: %s DR: %s.", params, reason);
+		format(string, sizeof string, "Administration: %s DR: %s.", params[0], reason);
 		SendClientMessage(playerid, COLOR_DEFAULT, string);
 	}
 	else
 	{
-		SendClientMessage(playerid, COLOR_DEFAULT, SHOOT_COMMANDS_ERR_PLAYERNOTFOUND);
+		SendClientMessage(playerid, COLOR_ERROR, SHOOT_COMMANDS_ERR_PLAYERNOTFOUND);
 		return CMD_SUCCESS;
 	}
 	return CMD_SUCCESS;
