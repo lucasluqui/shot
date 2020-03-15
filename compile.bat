@@ -1,1 +1,1 @@
-pawncc.exe shoot.pwn
+pawncc.exe shot.pwn
